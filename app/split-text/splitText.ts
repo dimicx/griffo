@@ -165,10 +165,11 @@ export function splitText(
       const charSpan = createSpan(charClass, charIndex);
       charSpan.textContent = measuredChar.char;
 
-      // Store expected relative position for compensation (skip first char)
+      // Store expected gap from previous character (skip first char)
       if (charIndex > 0) {
-        const relativeLeft = measuredChar.left - measuredWord.startLeft;
-        charSpan.dataset.expectedLeft = relativeLeft.toString();
+        const prevCharLeft = measuredWord.chars[charIndex - 1].left;
+        const gap = measuredChar.left - prevCharLeft;
+        charSpan.dataset.expectedGap = gap.toString();
       }
 
       wordSpan.appendChild(charSpan);
@@ -188,24 +189,24 @@ export function splitText(
   });
 
   // STEP 4: Apply kerning compensation (now that elements are in DOM)
-  // Use incremental approach: measure, apply margin, measure next
-  // This correctly accounts for how each margin affects subsequent characters
+  // Gap-based approach: measure gap between consecutive chars, apply margin to correct each gap
+  // This allows single-pass measurement since each margin only affects its own gap
   allWords.forEach((wordSpan) => {
     const chars = Array.from(wordSpan.children) as HTMLSpanElement[];
     if (chars.length < 2) return;
 
-    // Get first char position as reference (will re-measure for each char to avoid drift)
+    // Single pass: measure all current positions upfront
+    const positions = chars.map((c) => c.getBoundingClientRect().left);
+
+    // Calculate and apply margins based on gap differences
     for (let i = 1; i < chars.length; i++) {
       const charSpan = chars[i];
-      const expectedLeft = charSpan.dataset.expectedLeft;
+      const expectedGap = charSpan.dataset.expectedGap;
 
-      if (expectedLeft !== undefined) {
-        // Re-measure word start for each char to avoid floating point drift
-        const wordStartLeft = chars[0].getBoundingClientRect().left;
-        const originalRelativeLeft = parseFloat(expectedLeft);
-        const currentRelativeLeft =
-          charSpan.getBoundingClientRect().left - wordStartLeft;
-        const delta = originalRelativeLeft - currentRelativeLeft;
+      if (expectedGap !== undefined) {
+        const originalGap = parseFloat(expectedGap);
+        const currentGap = positions[i] - positions[i - 1];
+        const delta = originalGap - currentGap;
 
         // Apply reasonable kerning adjustments (round to 2 decimals to avoid float issues)
         if (Math.abs(delta) < 20) {
@@ -214,7 +215,7 @@ export function splitText(
         }
 
         // Clean up data attribute
-        delete charSpan.dataset.expectedLeft;
+        delete charSpan.dataset.expectedGap;
       }
     }
   });
