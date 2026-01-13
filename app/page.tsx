@@ -61,17 +61,17 @@ export default function Home() {
         </SplitText>
       </section>
 
-      {/* Example 3: Lines with fade and scale */}
+      {/* Example 3: Lines with fade, autoSplit and revert on complete */}
       <section className="flex w-full max-w-2xl flex-col gap-4">
         <span className="text-xs font-medium uppercase tracking-widest text-zinc-500">
           Line by Line (autoSplit)
         </span>
         <SplitText
           autoSplit
-          onSplit={({ lines }) => {
-            animate(
+          onSplit={async ({ lines }) => {
+            return animate(
               lines,
-              { opacity: [0, 1], x: [-30, 0], scale: [0.95, 1] },
+              { opacity: [0, 1], x: [-30, 0] },
               {
                 type: "spring",
                 duration: 1.2,

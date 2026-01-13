@@ -27,7 +27,8 @@ interface SplitResult {
 
 interface SplitTextProps {
   children: ReactElement;
-  onSplit: (result: SplitResult) => void;
+  /** Return a promise to revert to original HTML when it resolves */
+  onSplit: (result: SplitResult) => void | Promise<unknown>;
   options?: SplitTextOptions;
   autoSplit?: boolean;
 }
@@ -57,6 +58,7 @@ export function SplitText({
   const lastWidthRef = useRef<number | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasSplitRef = useRef(false);
+  const hasRevertedRef = useRef(false);
 
   const childRefCallback = useCallback((node: HTMLElement | null) => {
     setChildElement(node);
@@ -95,7 +97,20 @@ export function SplitText({
       containerRef.current.style.visibility = "visible";
 
       // Invoke the callback with split elements
-      onSplitRef.current(result);
+      const maybePromise = onSplitRef.current(result);
+
+      result.chars.forEach((char) => {
+        char.style.display = "inline";
+      });
+
+      // If onSplit returns a promise, revert to original HTML when it resolves
+      if (maybePromise instanceof Promise) {
+        maybePromise.then(() => {
+          if (!isMounted || originalHtmlRef.current === null) return;
+          childElement.innerHTML = originalHtmlRef.current;
+          hasRevertedRef.current = true;
+        });
+      }
     });
 
     return () => {
@@ -108,6 +123,8 @@ export function SplitText({
     if (!autoSplit || !childElement) return;
 
     const handleResize = () => {
+      // Skip if we've reverted to original HTML
+      if (hasRevertedRef.current) return;
       // Only re-split if we have multiple lines
       if (!hasMultipleLinesRef.current) return;
       if (originalHtmlRef.current === null) return;
