@@ -23,29 +23,42 @@ Complete guide for integrating SplitText with Motion's scroll and viewport detec
 
 ### Storage Strategy
 
-**✅ Colocate** - No storage needed:
+**✅ Use State with useEffect** - Recommended for scroll animations:
 ```tsx
-// React
-<SplitText onSplit={({ words }) => {
-  if (isInView) animate(words, { opacity: [0, 1] });
-}}>
+// React - proper pattern for useInView
+const [words, setWords] = useState([]);
+
+useEffect(() => {
+  if (isInView && words.length > 0) {
+    animate(words, { opacity: [0, 1] });
+  }
+}, [isInView, words]);
+
+// In onSplit: set initial styles, then store
+onSplit={({ words }) => {
+  words.forEach(w => w.style.opacity = "0");
+  setWords(words);
+}}
 ```
 
-**📦 Use Ref** - Only when needed:
+**📦 Use Ref** - For scroll-linked animations:
 ```tsx
-// React - for re-animation or scroll-linked
+// React - when directly manipulating styles
 const wordsRef = useRef(null);
 ```
 
-**❌ Avoid State** - Causes unnecessary re-renders:
+**❌ Avoid Colocating** - Won't react to isInView changes:
 ```tsx
-// DON'T DO THIS
-const [words, setWords] = useState(null);
+// DON'T DO THIS with useInView
+<SplitText onSplit={({ words }) => {
+  if (isInView) animate(words, { opacity: [0, 1] });
+}}>
+// onSplit runs once, can't respond to isInView changes
 ```
 
 ## React Patterns
 
-### Pattern 1: Animate Once When Visible (Colocated)
+### Pattern 1: Animate Once When Visible (useEffect Pattern)
 
 **Best for:** Simple "reveal on scroll" animations that trigger once.
 
@@ -53,7 +66,7 @@ const [words, setWords] = useState(null);
 import { SplitText } from './split-text';
 import { animate, stagger } from 'motion';
 import { useInView } from 'motion/react';
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 function AnimateOnView() {
   const ref = useRef(null);
@@ -61,19 +74,28 @@ function AnimateOnView() {
     once: true,    // Only trigger once
     amount: 0.5    // 50% visible
   });
+  const [words, setWords] = useState([]);
+
+  useEffect(() => {
+    if (isInView && words.length > 0) {
+      animate(
+        words,
+        { opacity: [0, 1], y: [20, 0] },
+        { delay: stagger(0.05) }
+      );
+    }
+  }, [isInView, words]);
 
   return (
     <div ref={ref}>
       <SplitText
         onSplit={({ words }) => {
-          // Logic colocated - no storage needed!
-          if (isInView) {
-            animate(
-              words,
-              { opacity: [0, 1], y: [20, 0] },
-              { delay: stagger(0.05) }
-            );
-          }
+          // Set initial styles to prevent flash
+          words.forEach(word => {
+            word.style.opacity = "0";
+            word.style.transform = "translateY(20px)";
+          });
+          setWords(words);
         }}
       >
         <h1>Reveals when scrolled into view</h1>
@@ -83,10 +105,10 @@ function AnimateOnView() {
 }
 ```
 
-**Why this works:**
-- `onSplit` runs after text is split
-- By that time, `isInView` is already set correctly
-- No storage needed - all logic in one place!
+**Why this pattern:**
+- `useEffect` watches for `isInView` changes
+- Initial styles prevent flash before animation
+- Clean separation of concerns
 
 ### Pattern 2: Re-animate on Each View
 
@@ -95,24 +117,34 @@ function AnimateOnView() {
 ```tsx
 function ReanimateOnView() {
   const containerRef = useRef(null);
-  const isInView = useInView(containerRef); // No "once" - tracks visibility
-  const wordsRef = useRef(null); // Store elements in ref
+  const isInView = useInView(containerRef, { amount: 0.3 }); // No "once" - tracks visibility
+  const [words, setWords] = useState([]);
 
   useEffect(() => {
-    if (isInView && wordsRef.current) {
+    if (words.length === 0) return;
+
+    if (isInView) {
       animate(
-        wordsRef.current,
-        { opacity: [0, 1], y: [20, 0] },
+        words,
+        { opacity: [0, 1], scale: [0.8, 1] },
         { delay: stagger(0.05) }
       );
+    } else {
+      // Animate out when leaving viewport
+      animate(words, { opacity: 0, scale: 0.8 }, { duration: 0.3 });
     }
-  }, [isInView]); // Re-run when visibility changes
+  }, [isInView, words]); // Re-run when visibility changes
 
   return (
     <div ref={containerRef}>
       <SplitText
         onSplit={({ words }) => {
-          wordsRef.current = words; // Store in ref, not state!
+          // Set initial hidden state
+          words.forEach(word => {
+            word.style.opacity = "0";
+            word.style.transform = "scale(0.8)";
+          });
+          setWords(words);
         }}
       >
         <h1>Re-animates each time visible</h1>
@@ -122,10 +154,10 @@ function ReanimateOnView() {
 }
 ```
 
-**Why use ref instead of state:**
-- Refs don't cause re-renders
-- Split only happens once, no need to react to changes
-- Cleaner and more performant
+**Why this pattern:**
+- Animations trigger on both enter and leave
+- Initial styles prevent flash
+- Clean effect dependencies
 
 ### Pattern 3: Scroll-Linked Animation
 
@@ -177,32 +209,43 @@ function ScrollLinked() {
 ```tsx
 function ResponsiveScrollReveal() {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.3 });
+  const isInView = useInView(ref, { amount: 0.5 });
+  const [words, setWords] = useState([]);
+
+  useEffect(() => {
+    if (isInView && words.length > 0) {
+      animate(words, { opacity: [0, 1] }, { delay: stagger(0.03) });
+    }
+  }, [isInView, words]);
 
   return (
     <div ref={ref}>
       <SplitText
         autoSplit // Re-splits on resize
-        onSplit={({ lines }) => {
-          // Animates on initial split only
-          if (isInView) {
-            animate(
-              lines,
-              { opacity: [0, 1], x: [-50, 0] },
-              { delay: stagger(0.1) }
-            );
-          }
+        onSplit={({ words }) => {
+          // Set initial state
+          words.forEach(word => word.style.opacity = "0");
+          setWords(words);
+        }}
+        onResize={({ words }) => {
+          // IMPORTANT: Also set initial state on resize!
+          words.forEach(word => word.style.opacity = "0");
+          setWords(words);
         }}
       >
         <p className="text-lg">
-          This text re-splits responsively but only animates
-          once when it first enters the viewport.
+          This text re-splits responsively and re-animates
+          when scrolled into view after resize.
         </p>
       </SplitText>
     </div>
   );
 }
 ```
+
+**Critical for AutoSplit:**
+- Set initial styles in **both** `onSplit` and `onResize`
+- Without this, text flashes after resize
 
 ## Vanilla JS Patterns
 
@@ -320,35 +363,59 @@ window.addEventListener('beforeunload', () => {
 
 ## Best Practices
 
-### ✅ DO: Colocate Logic When Possible
+### ✅ DO: Set Initial Styles to Prevent Flash
+
+**Critical for scroll animations!**
 
 ```tsx
-// React - colocate in onSplit
+// React
 <SplitText
   onSplit={({ words }) => {
-    if (isInView) animate(words, { opacity: [0, 1] });
+    // Set initial styles FIRST
+    words.forEach(word => {
+      word.style.opacity = "0";
+      word.style.transform = "translateY(20px)";
+    });
+    setWords(words);
   }}
 >
-  <h1>Text</h1>
-</SplitText>
 
-// Vanilla - all in one callback
+// Vanilla
+const result = splitText(element);
+result.words.forEach(word => {
+  word.style.opacity = "0";
+});
 inView(element, () => {
-  const result = splitText(element);
   animate(result.words, { opacity: [0, 1] });
 });
 ```
 
-### ✅ DO: Use Refs for Storage (React)
+### ✅ DO: Use State + useEffect for InView (React)
+
+```tsx
+const [words, setWords] = useState([]);
+
+useEffect(() => {
+  if (isInView && words.length > 0) {
+    animate(words, { opacity: [0, 1] });
+  }
+}, [isInView, words]);
+```
+
+### ✅ DO: Use Refs for Scroll-Linked Animations (React)
 
 ```tsx
 const wordsRef = useRef(null); // No re-renders
 
 useEffect(() => {
-  if (wordsRef.current) {
-    animate(wordsRef.current, { opacity: [0, 1] });
-  }
-}, [isInView]);
+  if (!wordsRef.current) return;
+
+  return scrollYProgress.on("change", (progress) => {
+    wordsRef.current.forEach(word => {
+      word.style.opacity = progress;
+    });
+  });
+}, [scrollYProgress]);
 ```
 
 ### ✅ DO: Cleanup AutoSplit Resources
@@ -365,11 +432,17 @@ window.addEventListener('beforeunload', () => {
 });
 ```
 
-### ❌ DON'T: Store in State (React)
+### ❌ DON'T: Skip Setting Initial Styles
 
 ```tsx
-// Causes unnecessary re-renders
-const [words, setWords] = useState(null);
+// ❌ BAD - text will flash before animation
+<SplitText onSplit={({ words }) => setWords(words)}>
+
+// ✅ GOOD - set initial styles first
+<SplitText onSplit={({ words }) => {
+  words.forEach(w => w.style.opacity = "0");
+  setWords(words);
+}}>
 ```
 
 ### ❌ DON'T: Split Before Fonts Load
@@ -402,7 +475,108 @@ window.addEventListener('beforeunload', () => {
 
 ## Common Pitfalls
 
-### Pitfall 1: Animation Doesn't Trigger
+### Pitfall 1: Text Flashes Before Animation (FOUC)
+
+**Problem:**
+Text is visible before the animation runs when scrolling into view, creating a "flash of unstyled content":
+
+```tsx
+function InViewExample() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  const [words, setWords] = useState([]);
+
+  useEffect(() => {
+    if (isInView && words.length > 0) {
+      // Text is already visible by the time animation runs!
+      animate(words, { opacity: [0, 1] });
+    }
+  }, [isInView, words]);
+
+  return (
+    <div ref={ref}>
+      <SplitText onSplit={({ words }) => setWords(words)}>
+        <p>This text flashes before animating!</p>
+      </SplitText>
+    </div>
+  );
+}
+```
+
+**Why it happens:**
+1. Split elements are created with default `opacity: 1`
+2. Element becomes visible immediately after splitting
+3. `useInView` detects visibility
+4. Animation tries to tween from `[0, 1]` but element is already at `1`
+
+**Solution:** Set initial styles in `onSplit` to match animation start values:
+
+```tsx
+function InViewExample() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  const [words, setWords] = useState([]);
+
+  useEffect(() => {
+    if (isInView && words.length > 0) {
+      animate(words, { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.05) });
+    }
+  }, [isInView, words]);
+
+  return (
+    <div ref={ref}>
+      <SplitText
+        onSplit={({ words }) => {
+          // ✅ Set initial styles BEFORE storing
+          words.forEach(word => {
+            word.style.opacity = "0";
+            word.style.transform = "translateY(20px)";
+          });
+          setWords(words);
+        }}
+      >
+        <p>This text starts hidden, then animates smoothly!</p>
+      </SplitText>
+    </div>
+  );
+}
+```
+
+**Key principle:** Initial styles must match the **first value** in the animation array:
+- `opacity: [0, 1]` → set `style.opacity = "0"`
+- `y: [20, 0]` → set `style.transform = "translateY(20px)"`
+- `scale: [0.8, 1]` → set `style.transform = "scale(0.8)"`
+- `rotateY: [90, 0]` → set `style.transform = "rotateY(90deg)"`
+- `filter: ['blur(4px)', 'blur(0px)']` → set `style.filter = "blur(4px)"`
+
+**With multiple transforms:**
+```tsx
+onSplit={({ words }) => {
+  words.forEach(word => {
+    word.style.opacity = "0";
+    word.style.transform = "translateY(20px) scale(0.8)";
+  });
+  setWords(words);
+}}
+```
+
+**With AutoSplit - set initial state in BOTH handlers:**
+```tsx
+<SplitText
+  autoSplit
+  onSplit={({ words }) => {
+    words.forEach(word => word.style.opacity = "0");
+    setWords(words);
+  }}
+  onResize={({ words }) => {
+    // Also set on resize!
+    words.forEach(word => word.style.opacity = "0");
+    setWords(words);
+  }}
+>
+```
+
+### Pitfall 2: Animation Doesn't Trigger
 
 **Problem:**
 ```tsx
@@ -460,18 +634,6 @@ const result = splitText(element, {
     setupInView(words); // Re-setup!
   }
 });
-```
-
-### Pitfall 4: Unnecessary Re-renders (React)
-
-**Problem:**
-```tsx
-const [words, setWords] = useState(null); // Re-renders on set!
-```
-
-**Solution:**
-```tsx
-const wordsRef = useRef(null); // No re-renders!
 ```
 
 ## InView Options Reference

@@ -1,8 +1,248 @@
 "use client";
 
 import { animate, stagger } from "motion";
+import { useInView } from "motion/react";
+import { useRef, useEffect, useState } from "react";
 import { SplitText } from "../split-text";
 import { GsapSplitText } from "./gsap-split-text";
+
+// Test 11: InView Hook Example
+function InViewExample() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { amount: 0.5, once: true });
+  const [words, setWords] = useState<HTMLSpanElement[]>([]);
+
+  useEffect(() => {
+    if (isInView && words.length > 0) {
+      animate(
+        words,
+        { opacity: [0, 1], y: [20, 0] },
+        { delay: stagger(0.05) }
+      );
+    }
+  }, [isInView, words]);
+
+  return (
+    <div ref={ref} className="mt-[100vh]">
+      <SplitText
+        onSplit={({ words }) => {
+          // Set initial opacity to 0 to prevent flash
+          words.forEach((word) => {
+            word.style.opacity = "0";
+          });
+          setWords(words);
+        }}
+      >
+        <p className="text-2xl text-zinc-200">
+          This text animates when you scroll it into view!
+        </p>
+      </SplitText>
+    </div>
+  );
+}
+
+// Test 12: Enter/Leave with useInView
+function EnterLeaveExample() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { amount: 0.3 });
+  const [words, setWords] = useState<HTMLSpanElement[]>([]);
+
+  useEffect(() => {
+    if (words.length === 0) return;
+
+    if (isInView) {
+      animate(
+        words,
+        { opacity: [0, 1], scale: [0.8, 1] },
+        { delay: stagger(0.05) }
+      );
+    } else {
+      animate(words, { opacity: 0, scale: 0.8 }, { duration: 0.3 });
+    }
+  }, [isInView, words]);
+
+  return (
+    <div ref={ref} className="mt-[50vh] mb-[100vh]">
+      <SplitText
+        onSplit={({ words }) => {
+          // Set initial hidden state to prevent flash
+          words.forEach((word) => {
+            word.style.opacity = "0";
+            word.style.transform = "scale(0.8)";
+          });
+          setWords(words);
+        }}
+      >
+        <p className="text-2xl text-zinc-200">
+          Watch me fade in and out as you scroll!
+        </p>
+      </SplitText>
+    </div>
+  );
+}
+
+// Test 13: Scroll Progress Example
+function ScrollProgressExample() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { amount: 0.3, once: true });
+  const [words, setWords] = useState<HTMLSpanElement[]>([]);
+
+  useEffect(() => {
+    if (isInView && words.length > 0) {
+      words.forEach((word, i) => {
+        setTimeout(() => {
+          animate(word, { opacity: [0, 1], y: [20, 0] });
+        }, i * 50);
+      });
+    }
+  }, [isInView, words]);
+
+  return (
+    <div ref={ref} className="mt-[50vh] mb-[100vh]">
+      <SplitText
+        onSplit={({ words }) => {
+          // Set initial hidden state to prevent flash
+          words.forEach((word) => {
+            word.style.opacity = "0";
+            word.style.transform = "translateY(20px)";
+          });
+          setWords(words);
+        }}
+      >
+        <p className="text-2xl leading-relaxed text-zinc-200">
+          This animation reveals as you scroll into view with smooth staggering!
+        </p>
+      </SplitText>
+    </div>
+  );
+}
+
+// Test 14: Character Reveal with useInView
+function CharacterRevealExample() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { amount: 0.3, once: true });
+  const [chars, setChars] = useState<HTMLSpanElement[]>([]);
+
+  useEffect(() => {
+    if (isInView && chars.length > 0) {
+      animate(
+        chars,
+        {
+          opacity: [0, 1],
+          rotateY: [90, 0],
+          filter: ["blur(4px)", "blur(0px)"],
+        },
+        { delay: stagger(0.02) }
+      );
+    }
+  }, [isInView, chars]);
+
+  return (
+    <div ref={ref} className="mt-[50vh]">
+      <SplitText
+        onSplit={({ chars }) => {
+          // Set initial hidden state to prevent flash
+          chars.forEach((char) => {
+            char.style.opacity = "0";
+            char.style.transform = "rotateY(90deg)";
+            char.style.filter = "blur(4px)";
+          });
+          setChars(chars);
+        }}
+      >
+        <p className="text-3xl font-bold text-zinc-200">
+          Character by character reveal
+        </p>
+      </SplitText>
+    </div>
+  );
+}
+
+// Test 15: AutoSplit with useInView
+function AutoSplitInViewExample() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { amount: 0.5 });
+  const [words, setWords] = useState<HTMLSpanElement[]>([]);
+
+  useEffect(() => {
+    if (isInView && words.length > 0) {
+      console.log("InView triggered with", words.length, "words");
+      animate(words, { opacity: [0, 1] }, { delay: stagger(0.03) });
+    }
+  }, [isInView, words]);
+
+  return (
+    <div ref={ref} className="mt-[50vh] mb-[50vh] max-w-2xl">
+      <SplitText
+        autoSplit
+        onSplit={({ words }) => {
+          // Set initial hidden state to prevent flash
+          words.forEach((word) => {
+            word.style.opacity = "0";
+          });
+          setWords(words);
+        }}
+        onResize={({ words }) => {
+          console.log("Re-split:", words.length, "words");
+          // ALSO set initial state on resize to prevent flash
+          words.forEach((word) => {
+            word.style.opacity = "0";
+          });
+          setWords(words);
+        }}
+      >
+        <p className="text-lg leading-relaxed text-zinc-200">
+          This text automatically re-splits when you resize the browser window
+          and re-animates when it enters the viewport. Try resizing the window,
+          then scroll up and down to see the animation trigger again with the
+          new line breaks!
+        </p>
+      </SplitText>
+    </div>
+  );
+}
+
+// Test 16: Line-by-line with useInView
+function LineRevealExample() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { amount: 0.3, once: true });
+  const [lines, setLines] = useState<HTMLSpanElement[]>([]);
+
+  useEffect(() => {
+    if (isInView && lines.length > 0) {
+      animate(
+        lines,
+        { opacity: [0, 1], x: [-30, 0] },
+        { delay: stagger(0.15) }
+      );
+    }
+  }, [isInView, lines]);
+
+  return (
+    <div ref={ref} className="mt-[50vh] mb-[100vh] max-w-2xl">
+      <SplitText
+        onSplit={({ lines }) => {
+          // Set initial hidden state to prevent flash
+          lines.forEach((line) => {
+            line.style.opacity = "0";
+            line.style.transform = "translateX(-30px)";
+          });
+          setLines(lines);
+        }}
+      >
+        <div className="text-xl leading-relaxed text-zinc-200">
+          <p>
+            Each line of this paragraph reveals as you scroll into view. The
+            animation triggers when the element enters the viewport, creating a
+            smooth line-by-line reveal effect. This works perfectly for
+            long-form content where you want to draw attention to each line as
+            the user reads.
+          </p>
+        </div>
+      </SplitText>
+    </div>
+  );
+}
 
 export default function TestPage() {
   return (
@@ -373,7 +613,8 @@ export default function TestPage() {
               1. type: &quot;chars&quot;
             </h3>
             <p className="text-xs text-zinc-600">
-              Returns char spans only (word spans created internally for spacing)
+              Returns char spans only (word spans created internally for
+              spacing)
             </p>
             <SplitText
               options={{ type: "chars" }}
@@ -502,7 +743,8 @@ export default function TestPage() {
               6. type: &quot;chars,lines&quot;
             </h3>
             <p className="text-xs text-zinc-600">
-              Returns char + line spans (word spans created internally for spacing)
+              Returns char + line spans (word spans created internally for
+              spacing)
             </p>
             <div className="max-w-sm">
               <SplitText
@@ -552,33 +794,104 @@ export default function TestPage() {
           </div>
 
           <div className="rounded-lg bg-zinc-900 p-4 text-sm text-zinc-400">
-            <p className="font-semibold text-white">
-              How it works:
-            </p>
+            <p className="font-semibold text-white">How it works:</p>
             <ul className="mt-2 space-y-1">
               <li>
-                • When splitting <strong>chars</strong>, word spans are created internally for proper spacing
+                • When splitting <strong>chars</strong>, word spans are created
+                internally for proper spacing
               </li>
               <li>
                 • Only the requested types are returned in the result arrays
               </li>
               <li>
-                • <code>type: &quot;chars&quot;</code> returns chars only (words array is empty)
+                • <code>type: &quot;chars&quot;</code> returns chars only (words
+                array is empty)
               </li>
               <li>
-                • <code>type: &quot;chars,lines&quot;</code> returns chars + lines (words array is empty)
+                • <code>type: &quot;chars,lines&quot;</code> returns chars +
+                lines (words array is empty)
               </li>
               <li>
-                • <strong>Optimized:</strong> type: &quot;lines&quot; (text nodes only, no char/word spans)
+                • <strong>Optimized:</strong> type: &quot;lines&quot; (text
+                nodes only, no char/word spans)
               </li>
               <li>• Check console logs to see result counts</li>
             </ul>
           </div>
         </section>
 
+        {/* Test 11: inView - Basic Trigger */}
+        <section className="space-y-4">
+          <h2 className="text-2xl font-semibold text-emerald-400">
+            11. InView - Basic Trigger (useInView Hook)
+          </h2>
+          <p className="text-sm text-zinc-500">
+            Uses useInView hook to animate when element enters viewport
+          </p>
+          <InViewExample />
+        </section>
+
+        {/* Test 12: inView - Enter/Leave Animations */}
+        <section className="space-y-4">
+          <h2 className="text-2xl font-semibold text-emerald-400">
+            12. InView - Enter/Leave Animations (useInView Hook)
+          </h2>
+          <p className="text-sm text-zinc-500">
+            Animates in when entering, animates out when leaving viewport
+          </p>
+          <EnterLeaveExample />
+        </section>
+
+        {/* Test 13: Scroll-Linked Animation */}
+        <section className="space-y-4">
+          <h2 className="text-2xl font-semibold text-emerald-400">
+            13. Scroll-Triggered Animation (IntersectionObserver)
+          </h2>
+          <p className="text-sm text-zinc-500">
+            Animation triggers when scrolling into view with staggered timing
+          </p>
+          <ScrollProgressExample />
+        </section>
+
+        {/* Test 14: Character Reveal on Scroll */}
+        <section className="space-y-4">
+          <h2 className="text-2xl font-semibold text-emerald-400">
+            14. Character Reveal on Scroll (useInView Hook)
+          </h2>
+          <p className="text-sm text-zinc-500">
+            Char-by-char reveal with 3D rotation on scroll into view
+          </p>
+          <CharacterRevealExample />
+        </section>
+
+        {/* Test 15: AutoSplit with InView Integration */}
+        <section className="space-y-4">
+          <h2 className="text-2xl font-semibold text-emerald-400">
+            15. AutoSplit with InView Integration (useInView Hook)
+          </h2>
+          <p className="text-sm text-zinc-500">
+            Responsive text that re-animates on resize using useInView hook
+          </p>
+          <AutoSplitInViewExample />
+        </section>
+
+        {/* Test 16: Scroll Progress with Lines */}
+        <section className="space-y-4">
+          <h2 className="text-2xl font-semibold text-emerald-400">
+            16. Line-by-Line Reveal (useInView Hook)
+          </h2>
+          <p className="text-sm text-zinc-500">
+            Line-by-line reveal when scrolling into view
+          </p>
+          <LineRevealExample />
+        </section>
+
         <div className="border-t border-zinc-800 pt-8">
           <p className="text-center text-sm text-zinc-500">
             Open browser DevTools Console to see warnings and logs
+          </p>
+          <p className="text-center text-sm text-zinc-600 mt-2">
+            Scroll down to see inView and scroll-linked animations in action
           </p>
         </div>
       </div>
