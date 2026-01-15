@@ -16,7 +16,14 @@ import {
 } from "react";
 
 interface SplitTextOptions {
-  type?: 'chars' | 'words' | 'lines' | 'chars,words' | 'words,lines' | 'chars,lines' | 'chars,words,lines';
+  type?:
+    | "chars"
+    | "words"
+    | "lines"
+    | "chars,words"
+    | "words,lines"
+    | "chars,lines"
+    | "chars,words,lines";
   charClass?: string;
   wordClass?: string;
   lineClass?: string;

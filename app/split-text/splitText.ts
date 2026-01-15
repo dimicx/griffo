@@ -6,7 +6,14 @@
 
 export interface SplitTextOptions {
   /** Split type: chars, words, lines, or combinations like "chars,words" */
-  type?: 'chars' | 'words' | 'lines' | 'chars,words' | 'words,lines' | 'chars,lines' | 'chars,words,lines';
+  type?:
+    | "chars"
+    | "words"
+    | "lines"
+    | "chars,words"
+    | "words,lines"
+    | "chars,lines"
+    | "chars,words,lines";
   charClass?: string;
   wordClass?: string;
   lineClass?: string;
@@ -54,15 +61,15 @@ const BREAK_CHARS = new Set(["—", "–"]);
  * Uses Intl.Segmenter for modern browsers.
  */
 function segmentGraphemes(text: string): string[] {
-  const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
-  return [...segmenter.segment(text)].map(s => s.segment);
+  const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+  return [...segmenter.segment(text)].map((s) => s.segment);
 }
 
 /**
  * Measure character positions in the original text using Range API.
  * Splits at whitespace AND after em-dashes/en-dashes for natural wrapping.
  */
-function measureOriginalText(element: HTMLElement): MeasuredWord[] {
+function measureOriginalText(element: HTMLElement, splitChars: boolean): MeasuredWord[] {
   const range = document.createRange();
   const words: MeasuredWord[] = [];
 
@@ -101,16 +108,21 @@ function measureOriginalText(element: HTMLElement): MeasuredWord[] {
         continue;
       }
 
-      // Measure character position using Range API
-      range.setStart(node, charOffset);
-      range.setEnd(node, charOffset + grapheme.length);
-      const rect = range.getBoundingClientRect();
+      if (splitChars) {
+        // Measure character position using Range API (only if splitting chars)
+        range.setStart(node, charOffset);
+        range.setEnd(node, charOffset + grapheme.length);
+        const rect = range.getBoundingClientRect();
 
-      if (wordStartLeft === null) {
-        wordStartLeft = rect.left;
+        if (wordStartLeft === null) {
+          wordStartLeft = rect.left;
+        }
+
+        currentWord.push({ char: grapheme, left: rect.left });
+      } else {
+        // If not splitting chars, just collect the characters without measuring
+        currentWord.push({ char: grapheme, left: 0 });
       }
-
-      currentWord.push({ char: grapheme, left: rect.left });
 
       // Break AFTER dash characters (dash stays with preceding text)
       if (BREAK_CHARS.has(grapheme)) {
@@ -156,10 +168,51 @@ function createSpan(
 
   // Add will-change hint for better animation performance
   if (options?.willChange) {
-    span.style.willChange = 'transform, opacity';
+    span.style.willChange = "transform, opacity";
   }
 
   return span;
+}
+
+/**
+ * Group elements into lines based on their Y position.
+ * Generic function that works with any element type (word spans, char spans, or text nodes).
+ */
+function groupIntoLines<T extends HTMLElement | Text>(
+  elements: T[],
+  element: HTMLElement
+): T[][] {
+  const fontSize = parseFloat(getComputedStyle(element).fontSize);
+  const tolerance = Math.max(5, fontSize * 0.3);
+
+  const lineGroups: T[][] = [];
+  let currentLine: T[] = [];
+  let currentY: number | null = null;
+
+  elements.forEach((el) => {
+    // Get Y position - for text nodes, use parent's bounding rect
+    const rect = el instanceof HTMLElement
+      ? el.getBoundingClientRect()
+      : el.parentElement!.getBoundingClientRect();
+    const y = Math.round(rect.top);
+
+    if (currentY === null) {
+      currentY = y;
+      currentLine.push(el);
+    } else if (Math.abs(y - currentY) < tolerance) {
+      currentLine.push(el);
+    } else {
+      lineGroups.push(currentLine);
+      currentLine = [el];
+      currentY = y;
+    }
+  });
+
+  if (currentLine.length > 0) {
+    lineGroups.push(currentLine);
+  }
+
+  return lineGroups;
 }
 
 /**
@@ -172,6 +225,9 @@ function performSplit(
   charClass: string,
   wordClass: string,
   lineClass: string,
+  splitChars: boolean,
+  splitWords: boolean,
+  splitLines: boolean,
   options?: { propIndex?: boolean; willChange?: boolean }
 ): {
   chars: HTMLSpanElement[];
@@ -181,149 +237,220 @@ function performSplit(
   // Clear element
   element.textContent = "";
 
-  // Track created elements
   const allChars: HTMLSpanElement[] = [];
   const allWords: HTMLSpanElement[] = [];
 
-  // Track which words shouldn't have space before them
-  const noSpaceBeforeSet = new Set<HTMLSpanElement>();
+  // Simplification: When splitting chars, we ALWAYS need word wrappers for proper spacing
+  // We'll create word spans internally, but only return them if user requested words
+  const needWordWrappers = splitChars || splitWords;
 
-  // STEP 2: Create word and character spans
-  measuredWords.forEach((measuredWord, wordIndex) => {
-    const wordSpan = createSpan(wordClass, wordIndex, "inline-block", {
-      propIndex: options?.propIndex,
-      willChange: options?.willChange,
-      propName: 'word'
-    });
+  // Branch based on whether we need word wrappers
+  if (needWordWrappers) {
+    // ========== PATH 1: KEEP WORD WRAPPERS ==========
 
-    if (measuredWord.noSpaceBefore) {
-      noSpaceBeforeSet.add(wordSpan);
-    }
+    const noSpaceBeforeSet = new Set<HTMLSpanElement>();
 
-    measuredWord.chars.forEach((measuredChar, charIndex) => {
-      const charSpan = createSpan(charClass, charIndex, "inline-block", {
+    // Create word spans (with char spans or text content)
+    measuredWords.forEach((measuredWord, wordIndex) => {
+      const wordSpan = createSpan(wordClass, wordIndex, "inline-block", {
         propIndex: options?.propIndex,
         willChange: options?.willChange,
-        propName: 'char'
+        propName: "word",
       });
-      charSpan.textContent = measuredChar.char;
 
-      // Store expected gap from previous character (skip first char)
-      if (charIndex > 0) {
-        const prevCharLeft = measuredWord.chars[charIndex - 1].left;
-        const gap = measuredChar.left - prevCharLeft;
-        charSpan.dataset.expectedGap = gap.toString();
+      if (measuredWord.noSpaceBefore) {
+        noSpaceBeforeSet.add(wordSpan);
       }
 
-      wordSpan.appendChild(charSpan);
-      allChars.push(charSpan);
-    });
+      if (splitChars) {
+        // Add char spans to word span
+        measuredWord.chars.forEach((measuredChar, charIndex) => {
+          const charSpan = createSpan(charClass, charIndex, "inline-block", {
+            propIndex: options?.propIndex,
+            willChange: options?.willChange,
+            propName: "char",
+          });
+          charSpan.textContent = measuredChar.char;
 
-    allWords.push(wordSpan);
-  });
+          // Store expected gap for kerning compensation
+          if (charIndex > 0) {
+            const prevCharLeft = measuredWord.chars[charIndex - 1].left;
+            const gap = measuredChar.left - prevCharLeft;
+            charSpan.dataset.expectedGap = gap.toString();
+          }
 
-  // STEP 3: Add words to DOM with spaces (skip space before dash continuations)
-  allWords.forEach((wordSpan, idx) => {
-    element.appendChild(wordSpan);
-    // Add space after, unless next word is a dash continuation
-    if (idx < allWords.length - 1 && !noSpaceBeforeSet.has(allWords[idx + 1])) {
-      element.appendChild(document.createTextNode(" "));
-    }
-  });
-
-  // STEP 4: Apply kerning compensation (now that elements are in DOM)
-  // Gap-based approach: measure gap between consecutive chars, apply margin to correct each gap
-  // This allows single-pass measurement since each margin only affects its own gap
-  allWords.forEach((wordSpan) => {
-    const chars = Array.from(wordSpan.children) as HTMLSpanElement[];
-    if (chars.length < 2) return;
-
-    // Single pass: measure all current positions upfront
-    const positions = chars.map((c) => c.getBoundingClientRect().left);
-
-    // Calculate and apply margins based on gap differences
-    for (let i = 1; i < chars.length; i++) {
-      const charSpan = chars[i];
-      const expectedGap = charSpan.dataset.expectedGap;
-
-      if (expectedGap !== undefined) {
-        const originalGap = parseFloat(expectedGap);
-        const currentGap = positions[i] - positions[i - 1];
-        const delta = originalGap - currentGap;
-
-        // Apply reasonable kerning adjustments (round to 2 decimals to avoid float issues)
-        if (Math.abs(delta) < 20) {
-          const roundedDelta = Math.round(delta * 100) / 100;
-          charSpan.style.marginLeft = `${roundedDelta}px`;
-        }
-
-        // Clean up data attribute
-        delete charSpan.dataset.expectedGap;
+          wordSpan.appendChild(charSpan);
+          allChars.push(charSpan);
+        });
+      } else {
+        // Add text directly to word span
+        wordSpan.textContent = measuredWord.chars.map((c) => c.char).join("");
       }
-    }
-  });
 
-  // STEP 5: Detect lines by Y position (AFTER compensation)
-  // Calculate tolerance based on font size (30% of font size, min 5px)
-  const fontSize = parseFloat(getComputedStyle(element).fontSize);
-  const tolerance = Math.max(5, fontSize * 0.3);
-
-  const lineGroups: HTMLSpanElement[][] = [];
-  let currentLine: HTMLSpanElement[] = [];
-  let currentY: number | null = null;
-
-  allWords.forEach((wordSpan) => {
-    const rect = wordSpan.getBoundingClientRect();
-    const wordY = Math.round(rect.top);
-
-    if (currentY === null) {
-      currentY = wordY;
-      currentLine.push(wordSpan);
-    } else if (Math.abs(wordY - currentY) < tolerance) {
-      currentLine.push(wordSpan);
-    } else {
-      lineGroups.push(currentLine);
-      currentLine = [wordSpan];
-      currentY = wordY;
-    }
-  });
-
-  if (currentLine.length > 0) {
-    lineGroups.push(currentLine);
-  }
-
-  // STEP 6: Wrap words in line spans
-  element.textContent = "";
-
-  const allLines: HTMLSpanElement[] = [];
-
-  lineGroups.forEach((words, lineIndex) => {
-    const lineSpan = createSpan(lineClass, lineIndex, "block", {
-      propIndex: options?.propIndex,
-      willChange: options?.willChange,
-      propName: 'line'
+      allWords.push(wordSpan);
     });
-    allLines.push(lineSpan);
 
-    words.forEach((wordSpan, wordIdx) => {
-      lineSpan.appendChild(wordSpan);
-      // Add space after, unless next word is a dash continuation
+    // Add words to DOM with proper spacing
+    allWords.forEach((wordSpan, idx) => {
+      element.appendChild(wordSpan);
       if (
-        wordIdx < words.length - 1 &&
-        !noSpaceBeforeSet.has(words[wordIdx + 1])
+        idx < allWords.length - 1 &&
+        !noSpaceBeforeSet.has(allWords[idx + 1])
       ) {
-        lineSpan.appendChild(document.createTextNode(" "));
+        element.appendChild(document.createTextNode(" "));
       }
     });
 
-    element.appendChild(lineSpan);
-  });
+    // Apply kerning compensation (if splitting chars)
+    if (splitChars) {
+      allWords.forEach((wordSpan) => {
+        const chars = Array.from(wordSpan.children) as HTMLSpanElement[];
+        if (chars.length < 2) return;
 
-  return {
-    chars: allChars,
-    words: allWords,
-    lines: allLines,
-  };
+        const positions = chars.map((c) => c.getBoundingClientRect().left);
+
+        for (let i = 1; i < chars.length; i++) {
+          const charSpan = chars[i];
+          const expectedGap = charSpan.dataset.expectedGap;
+
+          if (expectedGap !== undefined) {
+            const originalGap = parseFloat(expectedGap);
+            const currentGap = positions[i] - positions[i - 1];
+            const delta = originalGap - currentGap;
+
+            if (Math.abs(delta) < 20) {
+              const roundedDelta = Math.round(delta * 100) / 100;
+              charSpan.style.marginLeft = `${roundedDelta}px`;
+            }
+
+            delete charSpan.dataset.expectedGap;
+          }
+        }
+      });
+    }
+
+    // Handle line grouping
+    if (splitLines) {
+      const lineGroups = groupIntoLines(allWords, element);
+      element.textContent = "";
+
+      const allLines: HTMLSpanElement[] = [];
+      lineGroups.forEach((words, lineIndex) => {
+        const lineSpan = createSpan(lineClass, lineIndex, "block", {
+          propIndex: options?.propIndex,
+          willChange: options?.willChange,
+          propName: "line",
+        });
+
+        allLines.push(lineSpan);
+
+        words.forEach((wordSpan, wordIdx) => {
+          lineSpan.appendChild(wordSpan);
+          if (
+            wordIdx < words.length - 1 &&
+            !noSpaceBeforeSet.has(words[wordIdx + 1])
+          ) {
+            lineSpan.appendChild(document.createTextNode(" "));
+          }
+        });
+
+        element.appendChild(lineSpan);
+      });
+
+      // Return only what user requested (words might have been created internally for spacing)
+      return {
+        chars: allChars,
+        words: splitWords ? allWords : [],
+        lines: allLines,
+      };
+    }
+
+    // Return only what user requested (words might have been created internally for spacing)
+    return {
+      chars: allChars,
+      words: splitWords ? allWords : [],
+      lines: [],
+    };
+  } else {
+    // ========== PATH 2: LINES ONLY (no chars, no words) ==========
+
+    if (splitLines) {
+        // Create text nodes and group into lines
+        interface WordWrapper {
+          wrapper: HTMLSpanElement;
+          wordIndex: number;
+        }
+        const wordWrappers: WordWrapper[] = [];
+
+        measuredWords.forEach((measuredWord, idx) => {
+          const textNode = document.createTextNode(
+            measuredWord.chars.map((c) => c.char).join("")
+          );
+
+          // Wrap each word for measurement
+          const wrapper = document.createElement("span");
+          wrapper.style.display = "inline";
+          wrapper.appendChild(textNode);
+          element.appendChild(wrapper);
+
+          wordWrappers.push({ wrapper, wordIndex: idx });
+
+          // Add space after wrapper
+          if (
+            idx < measuredWords.length - 1 &&
+            !measuredWords[idx + 1].noSpaceBefore
+          ) {
+            const spaceNode = document.createTextNode(" ");
+            element.appendChild(spaceNode);
+          }
+        });
+
+        // Group into lines
+        const lineGroups = groupIntoLines(wordWrappers.map(w => w.wrapper), element);
+        element.textContent = "";
+
+        const allLines: HTMLSpanElement[] = [];
+        lineGroups.forEach((wrappers, lineIndex) => {
+          const lineSpan = createSpan(lineClass, lineIndex, "block", {
+            propIndex: options?.propIndex,
+            willChange: options?.willChange,
+            propName: "line",
+          });
+
+          allLines.push(lineSpan);
+
+          // Extract text from wrappers and add spaces
+          wrappers.forEach((wrapper, wrapperIdx) => {
+            // Extract text node from wrapper
+            while (wrapper.firstChild) {
+              lineSpan.appendChild(wrapper.firstChild);
+            }
+
+            // Add space after if needed
+            if (wrapperIdx < wrappers.length - 1) {
+              const nextWrapper = wrappers[wrapperIdx + 1];
+              const nextWordInfo = wordWrappers.find(w => w.wrapper === nextWrapper);
+
+              if (nextWordInfo && !measuredWords[nextWordInfo.wordIndex].noSpaceBefore) {
+                lineSpan.appendChild(document.createTextNode(" "));
+              }
+            }
+          });
+
+          element.appendChild(lineSpan);
+        });
+
+      return { chars: [], words: [], lines: allLines };
+    } else {
+      // Just text - nothing to split
+      const fullText = measuredWords
+        .map((w) => w.chars.map((c) => c.char).join(""))
+        .join(" ");
+      element.textContent = fullText;
+
+      return { chars: [], words: [], lines: [] };
+    }
+  }
 }
 
 /**
@@ -332,7 +459,7 @@ function performSplit(
 export function splitText(
   element: HTMLElement,
   {
-    type = 'chars,words,lines',
+    type = "chars,words,lines",
     charClass = "split-char",
     wordClass = "split-word",
     lineClass = "split-line",
@@ -345,37 +472,47 @@ export function splitText(
 ): SplitResult {
   // Validation
   if (!(element instanceof HTMLElement)) {
-    throw new Error('splitText: element must be an HTMLElement');
+    throw new Error("splitText: element must be an HTMLElement");
   }
 
   const text = element.textContent?.trim();
   if (!text) {
-    console.warn('splitText: element has no text content');
+    console.warn("splitText: element has no text content");
     return {
       chars: [],
       words: [],
       lines: [],
       revert: () => {},
       dispose: () => {},
-      prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      prefersReducedMotion: window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches,
     };
   }
 
   if (autoSplit && !element.parentElement) {
-    console.warn('splitText: autoSplit requires a parent element. AutoSplit will not work.');
+    console.warn(
+      "splitText: autoSplit requires a parent element. AutoSplit will not work."
+    );
   }
 
   // Store original HTML for revert
   const originalHTML = element.innerHTML;
 
   // Detect user motion preferences
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
 
-  // TODO: Implement selective splitting based on type option
-  // For now, we always split all three types (chars, words, lines)
-  // Future: Parse type to determine which splits to perform
-  if (type !== 'chars,words,lines') {
-    console.warn(`splitText: type="${type}" is not yet implemented. Defaulting to "chars,words,lines".`);
+  // Parse type option into flags
+  let splitChars = type.includes('chars');
+  let splitWords = type.includes('words');
+  let splitLines = type.includes('lines');
+
+  // Validate at least one type is selected
+  if (!splitChars && !splitWords && !splitLines) {
+    console.warn('splitText: type must include at least one of: chars, words, lines. Defaulting to "chars,words,lines".');
+    splitChars = splitWords = splitLines = true;
   }
 
   // State management (closure-based)
@@ -392,12 +529,14 @@ export function splitText(
   // Set aria-label for accessibility
   element.setAttribute("aria-label", text);
 
-  // Disable ligatures permanently - this ensures consistent appearance
-  // before split, during split, and after revert (ligatures can't span multiple elements)
-  element.style.fontVariantLigatures = "none";
+  // If splitting chars, force disable ligatures for consistency
+  // Ligatures can't span multiple char elements anyway
+  if (splitChars) {
+    element.style.fontVariantLigatures = "none";
+  }
 
   // STEP 1: Measure original character positions BEFORE modifying DOM
-  const measuredWords = measureOriginalText(element);
+  const measuredWords = measureOriginalText(element, splitChars);
 
   // Perform the split
   const { chars, words, lines } = performSplit(
@@ -406,6 +545,9 @@ export function splitText(
     charClass,
     wordClass,
     lineClass,
+    splitChars,
+    splitWords,
+    splitLines,
     { propIndex, willChange }
   );
 
@@ -439,8 +581,11 @@ export function splitText(
 
     element.innerHTML = originalHTML;
     element.removeAttribute("aria-label");
-    // Keep ligatures disabled for consistent appearance
-    element.style.fontVariantLigatures = "none";
+
+    // Keep ligatures disabled if we split chars (prevents visual shift on revert)
+    if (splitChars) {
+      element.style.fontVariantLigatures = "none";
+    }
 
     // Auto-dispose when reverted
     dispose();
@@ -472,13 +617,16 @@ export function splitText(
           if (!isActive) return;
 
           // Re-measure and re-split
-          const newMeasuredWords = measureOriginalText(element);
+          const newMeasuredWords = measureOriginalText(element, splitChars);
           const result = performSplit(
             element,
             newMeasuredWords,
             charClass,
             wordClass,
             lineClass,
+            splitChars,
+            splitWords,
+            splitLines,
             { propIndex, willChange }
           );
 

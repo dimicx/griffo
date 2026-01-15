@@ -243,7 +243,26 @@ document.fonts.ready.then(() => {
 
 ### Ligatures
 
-Font ligatures are automatically disabled (`fontVariantLigatures: "none"`) to ensure consistent appearance, as ligatures cannot span multiple elements.
+When splitting text into individual characters (`type` includes `'chars'`), ligatures are automatically disabled to ensure pixel-perfect visual consistency before, during, and after splitting.
+
+**Why ligatures are disabled:**
+- Ligatures (like "fi", "ff", "tt") render as single unified glyphs
+- These glyphs cannot span multiple `<span>` elements
+- When split, ligature glyphs are replaced with separate character glyphs
+- This creates an unavoidable visual difference
+
+**The Solution:**
+`font-variant-ligatures: none` is automatically applied when splitting chars, and remains disabled even after calling `revert()`. This prevents any visual shift when animations complete.
+
+**Performance Note:**
+If you only need to split by words or lines (not chars), ligatures remain enabled:
+```typescript
+const result = splitText(element, {
+  type: 'words,lines'  // Ligatures remain enabled (no char splitting)
+});
+```
+
+This matches the behavior of GSAP's SplitText plugin.
 
 ### Kerning Compensation
 
