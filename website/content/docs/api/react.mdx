@@ -1,0 +1,121 @@
+---
+title: SplitText (React)
+description: React component wrapper with automatic lifecycle management and viewport detection.
+---
+
+# SplitText (React)
+
+React component wrapper with automatic lifecycle management and viewport detection.
+
+```tsx
+import { SplitText } from 'fetta/react';
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `children` | `ReactElement` | — | Single React element to split |
+| `onSplit` | `function` | — | Called after text is split |
+| `onResize` | `function` | — | Called on autoSplit re-split |
+| `options` | `object` | — | Split options (type, classes, etc.) |
+| `autoSplit` | `boolean` | `false` | Re-split on container resize |
+| `revertOnComplete` | `boolean` | `false` | Revert after animation completes |
+| `inView` | `boolean \| object` | `false` | Enable viewport detection |
+| `onInView` | `function` | — | Called when entering viewport |
+| `onLeaveView` | `function` | — | Called when leaving viewport |
+| `ref` | `Ref` | — | Ref to container element |
+
+## Callback Signature
+
+All callbacks receive the same result object:
+
+```typescript
+interface SplitTextElements {
+  chars: HTMLSpanElement[];
+  words: HTMLSpanElement[];
+  lines: HTMLSpanElement[];
+  revert: () => void;
+}
+```
+
+## Basic Example
+
+```tsx
+<SplitText
+  onSplit={({ words }) => {
+    animate(words, { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.05) });
+  }}
+>
+  <h1>Animated Text</h1>
+</SplitText>
+```
+
+## Viewport Detection
+
+Use the built-in `inView` prop for scroll-triggered animations:
+
+```tsx
+<SplitText
+  onSplit={({ words }) => {
+    words.forEach(w => w.style.opacity = '0');
+  }}
+  inView={{ amount: 0.5, once: true }}
+  onInView={({ words }) =>
+    animate(words, { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.05) })
+  }
+>
+  <p>Animates when scrolled into view</p>
+</SplitText>
+```
+
+### inView Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `amount` | `number` | `0` | How much visible (0-1) |
+| `margin` | `string` | `"0px"` | Root margin |
+| `once` | `boolean` | `false` | Only trigger once |
+
+## Auto-Revert
+
+Return an animation from `onSplit` or `onInView` to enable auto-revert:
+
+```tsx
+<SplitText
+  revertOnComplete
+  onSplit={({ words }) => {
+    return animate(words, { opacity: [0, 1] });
+  }}
+>
+  <h1>Reverts after animation</h1>
+</SplitText>
+```
+
+## With Ref (Scroll-Driven)
+
+```tsx
+function ScrollAnimation() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  return (
+    <div className="h-[200vh]" ref={containerRef}>
+      <SplitText
+        onSplit={({ words }) => {
+          const animation = animate(
+            words,
+            { opacity: [0, 1], y: [50, 0] },
+            { delay: stagger(0.05) }
+          );
+          scroll(animation, {
+            target: containerRef.current!,
+            offset: ["start 85%", "start 15%"]
+          });
+        }}
+      >
+        <p>Scroll to reveal</p>
+      </SplitText>
+    </div>
+  );
+}
+```

@@ -1,33 +1,16 @@
 {
-  "name": "declarative-split-text",
-  "version": "0.1.0",
+  "name": "fetta-monorepo",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "lib:build": "pnpm --filter split-txt build",
-    "lib:dev": "pnpm --filter split-txt dev"
-  },
-  "dependencies": {
-    "gsap": "^3.14.2",
-    "motion": "^12.26.1",
-    "split-txt": "workspace:*",
-    "motion-plus": "https://api.motion.dev/registry.tgz?package=motion-plus&version=2.0.2&token=329a9240a97263a0d69c73c20120b89d433eeccbbb1de642cc38ccf7ed794750",
-    "next": "16.1.1",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "lib:build": "turbo build --filter=fetta",
+    "lib:dev": "turbo dev --filter=fetta"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/gsap": "^3.0.0",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.1",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "turbo": "^2"
+  },
+  "packageManager": "pnpm@9.15.4"
 }

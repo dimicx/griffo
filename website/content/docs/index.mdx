@@ -1,0 +1,51 @@
+---
+title: Introduction
+description: fetta is a text splitting library with built-in kerning compensation for smooth text animations.
+---
+
+# Introduction
+
+**fetta** is a text splitting library with built-in kerning compensation for smooth text animations.
+
+## Why fetta?
+
+When you split text into individual characters or words for animation, browsers lose kerning information — the subtle spacing adjustments between character pairs that make text look balanced. This causes characters to shift position, making animations look janky.
+
+**fetta solves this** by measuring character positions before splitting, then applying CSS margin adjustments after splitting to preserve the original spacing.
+
+## Features
+
+- **Kerning Compensation** — Maintains original character spacing after splitting
+- **Responsive AutoSplit** — Re-splits on container resize
+- **Auto-Revert** — Restore original HTML after animations
+- **Line Detection** — Automatically groups words into lines
+- **Built-in InView** — Viewport detection with `inView`, `onInView`, `onLeaveView`
+- **TypeScript** — Full type definitions included
+- **Framework Agnostic** — Use with vanilla JS or React
+
+## Quick Example
+
+```tsx
+import { SplitText } from 'fetta/react';
+import { animate, stagger } from 'motion';
+
+function AnimatedHeading() {
+  return (
+    <SplitText
+      onSplit={({ words }) => {
+        animate(
+          words,
+          { opacity: [0, 1], y: [20, 0] },
+          { delay: stagger(0.05) }
+        );
+      }}
+    >
+      <h1>Smooth text animation</h1>
+    </SplitText>
+  );
+}
+```
+
+## Works With Any Animation Library
+
+fetta works with **Motion**, **GSAP**, **Anime.js**, **CSS animations**, or the **Web Animations API**.

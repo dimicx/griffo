@@ -1,0 +1,55 @@
+---
+title: Installation
+description: Install fetta using your preferred package manager.
+---
+
+# Installation
+
+Install fetta using your preferred package manager:
+
+```bash npm
+npm install fetta
+```
+
+```bash pnpm
+pnpm add fetta
+```
+
+```bash yarn
+yarn add fetta
+```
+
+## Requirements
+
+- **Node.js** 18+
+- **React** 18+ (for React component, optional)
+
+## Browser Support
+
+fetta requires these modern browser features:
+
+- `ResizeObserver`
+- `Intl.Segmenter`
+- `Range.getBoundingClientRect()`
+
+All evergreen browsers are supported (Chrome, Firefox, Safari, Edge).
+
+## Imports
+
+### Vanilla JavaScript
+
+```typescript
+import { splitText } from 'fetta';
+```
+
+### React
+
+```tsx
+import { SplitText } from 'fetta/react';
+```
+
+### Types
+
+```typescript
+import type { SplitTextOptions, SplitTextResult } from 'fetta';
+```

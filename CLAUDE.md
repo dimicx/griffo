@@ -4,37 +4,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js project showcasing a custom `SplitText` implementation for advanced text animation effects. The project implements a sophisticated text-splitting utility that addresses kerning compensation and natural line wrapping with special character handling (em-dashes, en-dashes).
+**fetta** is a text-splitting library for advanced text animation effects. It implements a sophisticated text-splitting utility that addresses kerning compensation and natural line wrapping with special character handling (em-dashes, en-dashes).
+
+This is a monorepo containing:
+- `packages/fetta` - The core library (published to npm as `fetta`)
+- `website` - Documentation site built with Fumadocs
 
 ## Development Commands
 
 ```bash
-# Start development server (opens on http://localhost:3000)
-npm run dev
+# Start all development servers (turbo)
+pnpm dev
+
+# Build all packages
+pnpm build
+
+# Build only the fetta library
+pnpm lib:build
+
+# Start library development
+pnpm lib:dev
+```
+
+### Website-specific commands
+
+```bash
+cd website
+
+# Start dev server
+pnpm dev
 
 # Build for production
-npm run build
-
-# Start production server
-npm start
-
-# Run linter
-npm run lint
+pnpm build
 ```
 
 ## Architecture
 
-### Core Implementation
+### Package Structure
 
-The project contains two parallel implementations:
-
-1. **Custom SplitText** (`app/split-text/`)
-   - `splitText.ts` - Core splitting logic with built-in kerning compensation
-   - `index.tsx` - React component wrapper
-
-2. **Motion Plus SplitText** (`app/components/SplitText.tsx`)
-   - Uses `motion-plus` library's `splitText` function
-   - Adds custom kerning compensation and dash-splitting logic on top
+```
+packages/fetta/
+├── src/
+│   ├── core/
+│   │   ├── index.ts       # Core exports
+│   │   └── splitText.ts   # Core splitting logic with kerning compensation
+│   ├── react/
+│   │   ├── index.ts       # React exports
+│   │   └── SplitText.tsx  # React component wrapper
+│   └── index.ts           # Main entry (re-exports core)
+└── dist/                  # Built output
+```
 
 ### Key Architectural Features
 
@@ -46,15 +65,11 @@ The core innovation is measuring character positions BEFORE splitting, then appl
 3. Calculate gap differences between original and split positions
 4. Apply `marginLeft` adjustments to each character
 
-This approach is documented in `app/split-text/splitText.ts:193-223`.
-
 **Dash Handling**
 Text can wrap naturally after em-dashes (—) and en-dashes (–):
 - Words are split at these characters into separate word elements
 - Continuation segments (after dashes) are marked with `noSpaceBefore` flag
 - Spaces are conditionally inserted based on this flag
-
-See `app/split-text/splitText.ts:42-108` for measurement logic.
 
 **AutoSplit Feature**
 The implementation supports automatic re-splitting on resize:
@@ -65,16 +80,30 @@ The implementation supports automatic re-splitting on resize:
 
 **Revert on Complete**
 Text can be reverted to original HTML after animation completes:
-- Pass a Promise (e.g., `animate(...).finished`) to `revertOnComplete` option
-- Automatically calls `revert()` when promise resolves
+- Return an animation (e.g., `animate(...)`) from `onSplit` callback
+- Set `revertOnComplete={true}` to auto-revert when animation finishes
 - Cleans up observers and timers via `dispose()`
 
-### Component Structure
+**InView Support**
+Built-in viewport detection with IntersectionObserver:
+- `inView` prop enables viewport detection
+- `onInView` callback fires when element enters viewport
+- `onLeaveView` callback fires when element leaves viewport
+- Supports `once`, `amount`, and `margin` options
 
-- `app/page.tsx` - Main demo page with multiple animation examples
-- `app/example.tsx` - Basic example using motion-plus directly
-- `app/comparison/page.tsx` - Comparison page (assumed)
-- `app/layout.tsx` - Root layout
+### Website Structure
+
+```
+website/
+├── app/
+│   ├── docs/              # Fumadocs documentation
+│   │   ├── [[...slug]]/   # Dynamic doc pages
+│   │   └── layout.tsx     # Docs layout with sidebar
+│   ├── api/search/        # Search API endpoint
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Home page with examples
+└── content/docs/          # MDX documentation content
+```
 
 ## Important Implementation Details
 
@@ -88,7 +117,7 @@ Split text elements automatically receive `aria-label` with the original text co
 Lines are detected by Y-position clustering after kerning compensation is applied. Words with Y-positions within 5px tolerance are grouped into the same line.
 
 ### State Management in React Component
-The React wrapper (`app/split-text/index.tsx`) uses:
+The React wrapper uses:
 - `useRef` to avoid re-renders from prop changes
 - `useLayoutEffect` to keep refs in sync before effects run
 - Guards against double-execution in React StrictMode
@@ -109,29 +138,32 @@ Project uses strict TypeScript with:
 - Target: ES2017
 - JSX: react-jsx
 - Path alias: `@/*` maps to project root
-- Bundler module resolution (Next.js)
+- Bundler module resolution
 
 ## Dependencies
 
 Key dependencies:
-- `motion` - Animation library
-- `motion-plus` - Extended motion utilities including splitText
-- `next` 16.1.1
-- `react` 19.2.3
+- `motion` - Animation library (used in examples)
+- `next` 16.x
+- `react` 19.x
 - `tailwindcss` 4.x
+- `fumadocs-*` - Documentation framework
 
 ## Working with the Code
 
 ### Testing Changes
 There are no automated tests. Test changes by:
-1. Running `npm run dev`
+1. Running `pnpm dev`
 2. Viewing http://localhost:3000
 3. Checking multiple examples on the page
 4. Testing responsive behavior by resizing the browser
 
 ### Adding New Animation Examples
-New examples follow this pattern in `app/page.tsx`:
+New examples follow this pattern:
 ```tsx
+import { SplitText } from "fetta/react";
+import { animate, stagger } from "motion";
+
 <SplitText
   onSplit={({ chars, words, lines }) => {
     animate(elements, props, options);

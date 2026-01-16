@@ -1,0 +1,128 @@
+---
+title: Examples
+description: Common animation patterns with fetta.
+---
+
+# Examples
+
+Common animation patterns with fetta.
+
+## Basic Fade In
+
+```tsx
+<SplitText
+  onSplit={({ words }) => {
+    animate(
+      words,
+      { opacity: [0, 1], y: [20, 0] },
+      { delay: stagger(0.05), duration: 0.5 }
+    );
+  }}
+>
+  <h1>Fade in each word</h1>
+</SplitText>
+```
+
+## Character Reveal
+
+```tsx
+<SplitText
+  onSplit={({ chars }) => {
+    animate(
+      chars,
+      { opacity: [0, 1], scale: [0.5, 1] },
+      { delay: stagger(0.02), duration: 0.3 }
+    );
+  }}
+>
+  <h1>Character by character</h1>
+</SplitText>
+```
+
+## Line by Line
+
+```tsx
+<SplitText
+  onSplit={({ lines }) => {
+    animate(
+      lines,
+      { opacity: [0, 1], x: [-20, 0] },
+      { delay: stagger(0.1), duration: 0.6 }
+    );
+  }}
+>
+  <p>
+    This paragraph animates line by line.
+    Each line slides in from the left.
+  </p>
+</SplitText>
+```
+
+## Scroll-Triggered
+
+```tsx
+<SplitText
+  onSplit={({ words }) => {
+    words.forEach(w => w.style.opacity = '0');
+  }}
+  inView={{ amount: 0.5, once: true }}
+  onInView={({ words }) =>
+    animate(words, { opacity: [0, 1], y: [30, 0] }, { delay: stagger(0.03) })
+  }
+>
+  <h2>Reveals on scroll</h2>
+</SplitText>
+```
+
+## Enter/Leave Animation
+
+```tsx
+<SplitText
+  onSplit={({ words }) => {
+    words.forEach(w => w.style.opacity = '0');
+  }}
+  inView={{ amount: 0.3 }}
+  onInView={({ words }) =>
+    animate(words, { opacity: [0, 1], scale: [0.8, 1] }, { delay: stagger(0.05) })
+  }
+  onLeaveView={({ words }) =>
+    animate(words, { opacity: 0, scale: 0.8 }, { duration: 0.3 })
+  }
+>
+  <p>Fades in and out as you scroll</p>
+</SplitText>
+```
+
+## With GSAP
+
+```tsx
+<SplitText
+  onSplit={({ words }) => {
+    gsap.from(words, {
+      opacity: 0,
+      y: 30,
+      stagger: 0.05,
+      duration: 0.5,
+      ease: "power2.out"
+    });
+  }}
+>
+  <h1>Works with GSAP</h1>
+</SplitText>
+```
+
+## Responsive Text
+
+```tsx
+<SplitText
+  autoSplit
+  onSplit={({ lines }) => {
+    animate(lines, { opacity: [0, 1] });
+  }}
+  onResize={({ lines }) => {
+    animate(lines, { opacity: [0, 1] });
+  }}
+>
+  <p>Re-splits when container resizes</p>
+</SplitText>
+```
