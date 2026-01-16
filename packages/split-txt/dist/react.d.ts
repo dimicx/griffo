@@ -1,8 +1,8 @@
 import * as react from 'react';
 import { ReactElement } from 'react';
-export { SplextOptions, SplextResult } from './index.js';
+export { SplitTxtOptions, SplitTxtResult } from './index.js';
 
-interface SplextOptions {
+interface SplitTxtOptions {
     type?: "chars" | "words" | "lines" | "chars,words" | "words,lines" | "chars,lines" | "chars,words,lines";
     charClass?: string;
     wordClass?: string;
@@ -19,7 +19,7 @@ interface InViewOptions {
     once?: boolean;
 }
 /** Result passed to callbacks, includes revert for manual control */
-interface SplextElements {
+interface SplitTxtElements {
     chars: HTMLSpanElement[];
     words: HTMLSpanElement[];
     lines: HTMLSpanElement[];
@@ -32,32 +32,32 @@ type AnimationWithFinished = {
 };
 /** Return type for callbacks - void, single animation, array of animations, or promise */
 type CallbackReturn = void | AnimationWithFinished | AnimationWithFinished[] | Promise<unknown>;
-interface SplextProps {
+interface SplitTxtProps {
     children: ReactElement;
     /**
      * Called after text is split.
      * Return an animation or promise to enable revert (requires revertOnComplete).
      * If inView is enabled, this is called immediately but animation typically runs in onInView.
      */
-    onSplit?: (result: SplextElements) => CallbackReturn;
+    onSplit?: (result: SplitTxtElements) => CallbackReturn;
     /** Called when autoSplit triggers a re-split on resize */
-    onResize?: (result: SplextElements) => void;
-    options?: SplextOptions;
+    onResize?: (result: SplitTxtElements) => void;
+    options?: SplitTxtOptions;
     autoSplit?: boolean;
     /** When true, reverts to original HTML after animation promise resolves */
     revertOnComplete?: boolean;
     /** Enable viewport detection. Pass true for defaults or InViewOptions for customization */
     inView?: boolean | InViewOptions;
     /** Called when element enters viewport. Return animation for revertOnComplete support */
-    onInView?: (result: SplextElements) => CallbackReturn;
+    onInView?: (result: SplitTxtElements) => CallbackReturn;
     /** Called when element leaves viewport */
-    onLeaveView?: (result: SplextElements) => CallbackReturn;
+    onLeaveView?: (result: SplitTxtElements) => CallbackReturn;
 }
 /**
- * React component wrapper for the splext function.
- * Uses the optimized splext that handles kerning compensation
+ * React component wrapper for the splitTxt function.
+ * Uses the optimized splitTxt that handles kerning compensation
  * and dash splitting in a single pass.
  */
-declare const Splext: react.ForwardRefExoticComponent<SplextProps & react.RefAttributes<HTMLDivElement>>;
+declare const SplitTxt: react.ForwardRefExoticComponent<SplitTxtProps & react.RefAttributes<HTMLDivElement>>;
 
-export { Splext, type SplextElements };
+export { SplitTxt, type SplitTxtElements };

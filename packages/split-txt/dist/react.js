@@ -1,4 +1,4 @@
-import { splext, __spreadProps, __spreadValues } from './chunk-56APKNUD.js';
+import { splitTxt, __spreadProps, __spreadValues } from './chunk-P63OVMUI.js';
 import { forwardRef, useRef, useCallback, useState, useLayoutEffect, useEffect, isValidElement, cloneElement } from 'react';
 import { jsx } from 'react/jsx-runtime';
 
@@ -18,8 +18,8 @@ function normalizeToPromise(result) {
   }
   return null;
 }
-var Splext = forwardRef(
-  function Splext2({
+var SplitTxt = forwardRef(
+  function SplitTxt2({
     children,
     onSplit,
     onResize,
@@ -77,18 +77,18 @@ var Splext = forwardRef(
         var _a, _b;
         if (!isMounted || hasSplitRef.current) return;
         if (!containerRef.current) return;
-        const result = splext(childElement, __spreadProps(__spreadValues({}, optionsRef.current), {
+        const result = splitTxt(childElement, __spreadProps(__spreadValues({}, optionsRef.current), {
           autoSplit,
           onResize: (resizeResult) => {
             var _a2;
-            const newSplextElements = {
+            const newSplitTxtElements = {
               chars: resizeResult.chars,
               words: resizeResult.words,
               lines: resizeResult.lines,
               revert: result.revert
             };
-            splitResultRef.current = newSplextElements;
-            (_a2 = onResizeRef.current) == null ? void 0 : _a2.call(onResizeRef, newSplextElements);
+            splitResultRef.current = newSplitTxtElements;
+            (_a2 = onResizeRef.current) == null ? void 0 : _a2.call(onResizeRef, newSplitTxtElements);
           }
         }));
         revertFnRef.current = result.dispose;
@@ -113,7 +113,7 @@ var Splext = forwardRef(
               });
             } else if (callbackResult === void 0) ; else {
               console.warn(
-                "Splext: revertOnComplete is enabled but onSplit did not return an animation or promise."
+                "SplitTxt: revertOnComplete is enabled but onSplit did not return an animation or promise."
               );
             }
           }
@@ -172,7 +172,7 @@ var Splext = forwardRef(
       }
     }, [isInView]);
     if (!isValidElement(children)) {
-      console.error("Splext: children must be a single valid React element");
+      console.error("SplitTxt: children must be a single valid React element");
       return null;
     }
     const clonedChild = cloneElement(children, {
@@ -189,4 +189,4 @@ var Splext = forwardRef(
   }
 );
 
-export { Splext };
+export { SplitTxt };

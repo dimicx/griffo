@@ -1,5 +1,5 @@
 {
-  "name": "splext",
+  "name": "split-txt",
   "version": "1.0.0",
   "description": "Text splitting library with kerning compensation for animations",
   "type": "module",

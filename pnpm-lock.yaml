@@ -26,9 +26,9 @@ importers:
       react-dom:
         specifier: 19.2.3
         version: 19.2.3(react@19.2.3)
-      splext:
+      split-txt:
         specifier: workspace:*
-        version: link:packages/splext
+        version: link:packages/split-txt
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4
@@ -58,7 +58,7 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  packages/splext:
+  packages/split-txt:
     devDependencies:
       '@types/react':
         specifier: ^19

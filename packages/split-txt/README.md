@@ -1,4 +1,4 @@
-# splext
+# split-txt
 
 A text splitting library with built-in kerning compensation for smooth text animations.
 
@@ -16,7 +16,7 @@ A text splitting library with built-in kerning compensation for smooth text anim
 ## Installation
 
 ```bash
-npm install splext
+npm install split-txt
 ```
 
 ## Usage
@@ -24,11 +24,11 @@ npm install splext
 ### Vanilla JavaScript
 
 ```typescript
-import { splitText } from 'splext';
+import { splitTxt } from 'split-txt';
 import { animate, stagger } from 'motion';
 
 const element = document.querySelector('h1');
-const result = splitText(element);
+const result = splitTxt(element);
 
 animate(
   result.words,
@@ -40,12 +40,12 @@ animate(
 ### React
 
 ```tsx
-import { SplitText } from 'splext/react';
+import { SplitTxt } from 'split-txt/react';
 import { animate, stagger } from 'motion';
 
 function MyComponent() {
   return (
-    <SplitText
+    <SplitTxt
       onSplit={({ words }) => {
         animate(
           words,
@@ -55,19 +55,19 @@ function MyComponent() {
       }}
     >
       <h1>Animated Text</h1>
-    </SplitText>
+    </SplitTxt>
   );
 }
 ```
 
 ## API
 
-### splitText(element, options?)
+### splitTxt(element, options?)
 
 Split text in an HTML element into characters, words, and/or lines.
 
 ```typescript
-const result = splitText(element, {
+const result = splitTxt(element, {
   type: 'chars,words,lines', // What to split into
   charClass: 'split-char',   // Class for character spans
   wordClass: 'split-word',   // Class for word spans
@@ -87,12 +87,12 @@ result.revert();  // Restore original HTML
 result.dispose(); // Cleanup observers
 ```
 
-### SplitText (React)
+### SplitTxt (React)
 
 React component wrapper with automatic lifecycle management.
 
 ```tsx
-<SplitText
+<SplitTxt
   // Called after text is split
   onSplit={({ chars, words, lines, revert }) => {
     // Set initial state, run animations
@@ -126,7 +126,7 @@ React component wrapper with automatic lifecycle management.
   }}
 >
   <h1>Text to split</h1>
-</SplitText>
+</SplitTxt>
 ```
 
 **Callback result types:**
@@ -140,7 +140,7 @@ React component wrapper with automatic lifecycle management.
 
 ```typescript
 // Vanilla
-const result = splitText(element, {
+const result = splitTxt(element, {
   autoSplit: true,
   onResize: ({ lines }) => {
     animate(lines, { opacity: [0, 1] });
@@ -153,7 +153,7 @@ result.dispose();
 
 ```tsx
 // React
-<SplitText
+<SplitTxt
   autoSplit
   onSplit={({ lines }) => {
     animate(lines, { opacity: [0, 1] });
@@ -164,7 +164,7 @@ result.dispose();
   }}
 >
   <p>Responsive paragraph</p>
-</SplitText>
+</SplitTxt>
 ```
 
 ### Auto-Revert After Animation
@@ -172,21 +172,21 @@ result.dispose();
 ```typescript
 // Vanilla
 const animation = animate(words, { opacity: [0, 1] });
-splitText(element, {
+splitTxt(element, {
   revertOnComplete: animation.finished
 });
 ```
 
 ```tsx
 // React
-<SplitText
+<SplitTxt
   revertOnComplete
   onSplit={({ words }) => {
     return animate(words, { opacity: [0, 1] }).finished;
   }}
 >
   <h1>Text</h1>
-</SplitText>
+</SplitTxt>
 ```
 
 ### Scroll-Triggered Animation (React)
@@ -194,7 +194,7 @@ splitText(element, {
 Using the built-in `inView` prop - no hooks needed:
 
 ```tsx
-<SplitText
+<SplitTxt
   onSplit={({ words }) => {
     // Set initial hidden state
     words.forEach(w => w.style.opacity = '0');
@@ -205,13 +205,13 @@ Using the built-in `inView` prop - no hooks needed:
   }
 >
   <p>This animates when scrolled into view</p>
-</SplitText>
+</SplitTxt>
 ```
 
 ### Enter/Leave Animations
 
 ```tsx
-<SplitText
+<SplitTxt
   onSplit={({ words }) => {
     words.forEach(w => w.style.opacity = '0');
   }}
@@ -224,13 +224,13 @@ Using the built-in `inView` prop - no hooks needed:
   }
 >
   <p>Watch me fade in and out as you scroll!</p>
-</SplitText>
+</SplitTxt>
 ```
 
 ### Manual Revert Control
 
 ```tsx
-<SplitText
+<SplitTxt
   inView={{ once: true }}
   onSplit={({ words }) => {
     words.forEach(w => w.style.opacity = '0');
@@ -243,7 +243,7 @@ Using the built-in `inView` prop - no hooks needed:
   }}
 >
   <p>Text reverts after animation</p>
-</SplitText>
+</SplitTxt>
 ```
 
 ## How It Works

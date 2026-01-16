@@ -7,13 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "lib:build": "pnpm --filter splext build",
-    "lib:dev": "pnpm --filter splext dev"
+    "lib:build": "pnpm --filter split-txt build",
+    "lib:dev": "pnpm --filter split-txt dev"
   },
   "dependencies": {
     "gsap": "^3.14.2",
     "motion": "^12.26.1",
-    "splext": "workspace:*",
+    "split-txt": "workspace:*",
     "motion-plus": "https://api.motion.dev/registry.tgz?package=motion-plus&version=2.0.2&token=329a9240a97263a0d69c73c20120b89d433eeccbbb1de642cc38ccf7ed794750",
     "next": "16.1.1",
     "react": "19.2.3",

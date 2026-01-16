@@ -4,7 +4,7 @@
  * then detects lines based on actual rendered positions.
  */
 
-export interface SplextOptions {
+export interface SplitTxtOptions {
   /** Split type: chars, words, lines, or combinations like "chars,words" */
   type?:
     | "chars"
@@ -20,7 +20,7 @@ export interface SplextOptions {
   /** Auto-split on resize (observes parent element) */
   autoSplit?: boolean;
   /** Callback when resize triggers re-split (does not re-trigger initial animations) */
-  onResize?: (result: Omit<SplextResult, "revert" | "dispose">) => void;
+  onResize?: (result: Omit<SplitTxtResult, "revert" | "dispose">) => void;
   /** Auto-revert when promise resolves (e.g., animation.finished) */
   revertOnComplete?: Promise<unknown>;
   /** Add CSS custom properties (--char-index, --word-index, --line-index) */
@@ -29,7 +29,7 @@ export interface SplextOptions {
   willChange?: boolean;
 }
 
-export interface SplextResult {
+export interface SplitTxtResult {
   chars: HTMLSpanElement[];
   words: HTMLSpanElement[];
   lines: HTMLSpanElement[];
@@ -455,7 +455,7 @@ function performSplit(
 /**
  * Split text into characters, words, and lines with kerning compensation.
  */
-export function splext(
+export function splitTxt(
   element: HTMLElement,
   {
     type = "chars,words,lines",
@@ -467,8 +467,8 @@ export function splext(
     revertOnComplete,
     propIndex = false,
     willChange = false,
-  }: SplextOptions = {}
-): SplextResult {
+  }: SplitTxtOptions = {}
+): SplitTxtResult {
   // Validation
   if (!(element instanceof HTMLElement)) {
     throw new Error("splitText: element must be an HTMLElement");

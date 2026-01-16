@@ -1,4 +1,4 @@
-import { splext, SplextResult } from "../core/splext";
+import { splitTxt, SplitTxtResult } from "../core/splitTxt";
 import {
   cloneElement,
   forwardRef,
@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 
-interface SplextOptions {
+interface SplitTxtOptions {
   type?:
     | "chars"
     | "words"
@@ -37,7 +37,7 @@ interface InViewOptions {
 }
 
 /** Result passed to callbacks, includes revert for manual control */
-export interface SplextElements {
+export interface SplitTxtElements {
   chars: HTMLSpanElement[];
   words: HTMLSpanElement[];
   lines: HTMLSpanElement[];
@@ -55,26 +55,26 @@ type CallbackReturn =
   | AnimationWithFinished[]
   | Promise<unknown>;
 
-interface SplextProps {
+interface SplitTxtProps {
   children: ReactElement;
   /**
    * Called after text is split.
    * Return an animation or promise to enable revert (requires revertOnComplete).
    * If inView is enabled, this is called immediately but animation typically runs in onInView.
    */
-  onSplit?: (result: SplextElements) => CallbackReturn;
+  onSplit?: (result: SplitTxtElements) => CallbackReturn;
   /** Called when autoSplit triggers a re-split on resize */
-  onResize?: (result: SplextElements) => void;
-  options?: SplextOptions;
+  onResize?: (result: SplitTxtElements) => void;
+  options?: SplitTxtOptions;
   autoSplit?: boolean;
   /** When true, reverts to original HTML after animation promise resolves */
   revertOnComplete?: boolean;
   /** Enable viewport detection. Pass true for defaults or InViewOptions for customization */
   inView?: boolean | InViewOptions;
   /** Called when element enters viewport. Return animation for revertOnComplete support */
-  onInView?: (result: SplextElements) => CallbackReturn;
+  onInView?: (result: SplitTxtElements) => CallbackReturn;
   /** Called when element leaves viewport */
-  onLeaveView?: (result: SplextElements) => CallbackReturn;
+  onLeaveView?: (result: SplitTxtElements) => CallbackReturn;
 }
 
 /**
@@ -106,12 +106,12 @@ function normalizeToPromise(result: CallbackReturn): Promise<unknown> | null {
 }
 
 /**
- * React component wrapper for the splext function.
- * Uses the optimized splext that handles kerning compensation
+ * React component wrapper for the splitTxt function.
+ * Uses the optimized splitTxt that handles kerning compensation
  * and dash splitting in a single pass.
  */
-export const Splext = forwardRef<HTMLDivElement, SplextProps>(
-  function Splext(
+export const SplitTxt = forwardRef<HTMLDivElement, SplitTxtProps>(
+  function SplitTxt(
     {
       children,
       onSplit,
@@ -165,7 +165,7 @@ export const Splext = forwardRef<HTMLDivElement, SplextProps>(
   const hasSplitRef = useRef(false);
   const hasRevertedRef = useRef(false);
   const revertFnRef = useRef<(() => void) | null>(null);
-  const splitResultRef = useRef<SplextElements | null>(null);
+  const splitResultRef = useRef<SplitTxtElements | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const hasTriggeredOnceRef = useRef(false);
 
@@ -184,20 +184,20 @@ export const Splext = forwardRef<HTMLDivElement, SplextProps>(
       if (!isMounted || hasSplitRef.current) return;
       if (!containerRef.current) return;
 
-      // Use core splext with autoSplit feature
-      const result = splext(childElement, {
+      // Use core splitTxt with autoSplit feature
+      const result = splitTxt(childElement, {
         ...optionsRef.current,
         autoSplit,
         onResize: (resizeResult) => {
           // Update stored result with new elements but same revert
-          const newSplextElements: SplextElements = {
+          const newSplitTxtElements: SplitTxtElements = {
             chars: resizeResult.chars,
             words: resizeResult.words,
             lines: resizeResult.lines,
             revert: result.revert,
           };
-          splitResultRef.current = newSplextElements;
-          onResizeRef.current?.(newSplextElements);
+          splitResultRef.current = newSplitTxtElements;
+          onResizeRef.current?.(newSplitTxtElements);
         },
       });
 
@@ -207,7 +207,7 @@ export const Splext = forwardRef<HTMLDivElement, SplextProps>(
       hasSplitRef.current = true;
 
       // Create result object with revert exposed
-      const splitElements: SplextElements = {
+      const splitElements: SplitTxtElements = {
         chars: result.chars,
         words: result.words,
         lines: result.lines,
@@ -235,7 +235,7 @@ export const Splext = forwardRef<HTMLDivElement, SplextProps>(
             // No warning if onSplit didn't return anything - user might be setting up state
           } else {
             console.warn(
-              "Splext: revertOnComplete is enabled but onSplit did not return an animation or promise."
+              "SplitTxt: revertOnComplete is enabled but onSplit did not return an animation or promise."
             );
           }
         }
@@ -309,7 +309,7 @@ export const Splext = forwardRef<HTMLDivElement, SplextProps>(
   }, [isInView]);
 
   if (!isValidElement(children)) {
-    console.error("Splext: children must be a single valid React element");
+    console.error("SplitTxt: children must be a single valid React element");
     return null;
   }
 
