@@ -1,14 +1,27 @@
 ---
 title: Examples
-description: Common animation patterns with fetta.
+description: Common animation patterns with Fetta.
 ---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { BasicFadeIn, CharacterReveal, LineByLine, ScrollTriggered } from "../../app/components/examples";
+import { ExampleWrapper } from "../../app/components/example-wrapper";
 
 # Examples
 
-Common animation patterns with fetta.
+Common animation patterns with Fetta.
 
 ## Basic Fade In
 
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <BasicFadeIn />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
 ```tsx
 <SplitText
   onSplit={({ words }) => {
@@ -22,9 +35,20 @@ Common animation patterns with fetta.
   <h1>Fade in each word</h1>
 </SplitText>
 ```
+  </Tab>
+</Tabs>
 
 ## Character Reveal
 
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <CharacterReveal />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
 ```tsx
 <SplitText
   onSplit={({ chars }) => {
@@ -38,9 +62,20 @@ Common animation patterns with fetta.
   <h1>Character by character</h1>
 </SplitText>
 ```
+  </Tab>
+</Tabs>
 
 ## Line by Line
 
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <LineByLine />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
 ```tsx
 <SplitText
   onSplit={({ lines }) => {
@@ -57,9 +92,20 @@ Common animation patterns with fetta.
   </p>
 </SplitText>
 ```
+  </Tab>
+</Tabs>
 
 ## Scroll-Triggered
 
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <ScrollTriggered />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
 ```tsx
 <SplitText
   onSplit={({ words }) => {
@@ -73,56 +119,5 @@ Common animation patterns with fetta.
   <h2>Reveals on scroll</h2>
 </SplitText>
 ```
-
-## Enter/Leave Animation
-
-```tsx
-<SplitText
-  onSplit={({ words }) => {
-    words.forEach(w => w.style.opacity = '0');
-  }}
-  inView={{ amount: 0.3 }}
-  onInView={({ words }) =>
-    animate(words, { opacity: [0, 1], scale: [0.8, 1] }, { delay: stagger(0.05) })
-  }
-  onLeaveView={({ words }) =>
-    animate(words, { opacity: 0, scale: 0.8 }, { duration: 0.3 })
-  }
->
-  <p>Fades in and out as you scroll</p>
-</SplitText>
-```
-
-## With GSAP
-
-```tsx
-<SplitText
-  onSplit={({ words }) => {
-    gsap.from(words, {
-      opacity: 0,
-      y: 30,
-      stagger: 0.05,
-      duration: 0.5,
-      ease: "power2.out"
-    });
-  }}
->
-  <h1>Works with GSAP</h1>
-</SplitText>
-```
-
-## Responsive Text
-
-```tsx
-<SplitText
-  autoSplit
-  onSplit={({ lines }) => {
-    animate(lines, { opacity: [0, 1] });
-  }}
-  onResize={({ lines }) => {
-    animate(lines, { opacity: [0, 1] });
-  }}
->
-  <p>Re-splits when container resizes</p>
-</SplitText>
-```
+  </Tab>
+</Tabs>
