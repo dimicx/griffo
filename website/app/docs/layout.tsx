@@ -10,12 +10,11 @@ export default function Layout({ children }: { children: ReactNode }) {
       tree={source.pageTree}
       nav={{
         title: (
-          <Link href="/" aria-label="Fetta homepage" title="Fetta homepage">
-            <span aria-hidden="true" className="h-6 block">
-              <FettaLogo />
-            </span>
-          </Link>
+          <span className="h-6 block">
+            <FettaLogo />
+          </span>
         ),
+        url: "/",
       }}
     >
       {children}

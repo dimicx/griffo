@@ -1,4 +1,14 @@
 {
   "title": "Documentation",
-  "pages": ["index", "installation", "api", "examples"]
+  "pages": [
+    "---Basics---",
+    "index",
+    "installation",
+    "---API---",
+    "api/index",
+    "api/core",
+    "api/react",
+    "---Guides---",
+    "examples"
+  ]
 }
