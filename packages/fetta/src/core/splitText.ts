@@ -298,6 +298,9 @@ function performSplit(
 
     const noSpaceBeforeSet = new Set<HTMLSpanElement>();
 
+    // Global character index counter (for propIndex across all words)
+    let globalCharIndex = 0;
+
     // Create word spans (with char spans or text content)
     measuredWords.forEach((measuredWord, wordIndex) => {
       const wordSpan = createSpan(wordClass, wordIndex, "inline-block", {
@@ -313,12 +316,13 @@ function performSplit(
       if (splitChars) {
         // Add char spans to word span
         measuredWord.chars.forEach((measuredChar, charIndex) => {
-          const charSpan = createSpan(charClass, charIndex, "inline-block", {
+          const charSpan = createSpan(charClass, globalCharIndex, "inline-block", {
             propIndex: options?.propIndex,
             willChange: options?.willChange,
             propName: "char",
           });
           charSpan.textContent = measuredChar.char;
+          globalCharIndex++;
 
           // Store expected gap for kerning compensation
           if (charIndex > 0) {
