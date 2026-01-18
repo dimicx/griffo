@@ -4,7 +4,7 @@ description: Common animation patterns with Fetta and React.
 ---
 
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
-import { BasicFadeIn, CharacterReveal, LineByLine, ScrollTriggered } from "../../app/components/examples";
+import { BasicFadeIn, CharacterReveal, LineByLine, ScrollTriggered, AutoRevert } from "../../app/components/examples";
 import { ExampleWrapper } from "../../app/components/example-wrapper";
 
 # React Examples
@@ -96,6 +96,32 @@ Lines are detected based on actual rendered positions, so this works with any te
     This paragraph animates line by line.
     Each line slides in from the left.
   </p>
+</SplitText>
+```
+  </Tab>
+</Tabs>
+
+## With Auto-Revert
+
+Set `revertOnComplete` to automatically restore the original HTML when the animation finishes. Return your animation from the `onSplit` callback - Fetta handles extracting the `.finished` promise.
+
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <AutoRevert />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```tsx
+<SplitText
+  onSplit={({ words }) =>
+    animate(words, { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.05) })
+  }
+  revertOnComplete
+>
+  <h1>Auto-revert after animation</h1>
 </SplitText>
 ```
   </Tab>

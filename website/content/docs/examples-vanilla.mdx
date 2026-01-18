@@ -100,7 +100,7 @@ animate(
 
 ## With Auto-Revert
 
-Pass an animation promise to `revertOnComplete` to automatically restore the original HTML when the animation finishes. This cleans up the split spans and returns the text to its natural state.
+Use `onSplit` with `revertOnComplete: true` to automatically restore the original HTML when the animation finishes. Return your animation from the callback - Fetta handles extracting the `.finished` promise.
 
 <Tabs items={['Preview', 'Code']}>
   <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
@@ -116,17 +116,11 @@ import { splitText } from 'fetta';
 import { animate, stagger } from 'motion';
 
 const element = document.querySelector('h1');
-const { words } = splitText(element);
 
-const animation = animate(
-  words,
-  { opacity: [0, 1], y: [20, 0] },
-  { delay: stagger(0.05) }
-);
-
-// Revert to original HTML when animation completes
 splitText(element, {
-  revertOnComplete: animation.finished
+  onSplit: ({ words }) =>
+    animate(words, { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.05) }),
+  revertOnComplete: true
 });
 ```
   </Tab>

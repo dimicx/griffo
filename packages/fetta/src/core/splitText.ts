@@ -21,8 +21,18 @@ export interface SplitTextOptions {
   autoSplit?: boolean;
   /** Callback when resize triggers re-split (does not re-trigger initial animations) */
   onResize?: (result: Omit<SplitTextResult, "revert" | "dispose">) => void;
-  /** Auto-revert when promise resolves (e.g., animation.finished) */
-  revertOnComplete?: Promise<unknown>;
+  /** Callback fired after text is split, receives split elements. Return animation for revertOnComplete. */
+  onSplit?: (result: {
+    chars: HTMLSpanElement[];
+    words: HTMLSpanElement[];
+    lines: HTMLSpanElement[];
+  }) =>
+    | void
+    | { finished: Promise<unknown> }
+    | Array<{ finished: Promise<unknown> }>
+    | Promise<unknown>;
+  /** Auto-revert when onSplit animation completes */
+  revertOnComplete?: boolean;
   /** Add CSS custom properties (--char-index, --word-index, --line-index) */
   propIndex?: boolean;
   /** Add will-change: transform, opacity to split elements for better animation performance */
@@ -53,6 +63,32 @@ interface MeasuredWord {
 
 // Characters that act as break points (word can wrap after these)
 const BREAK_CHARS = new Set(["—", "–"]);
+
+/**
+ * Normalize various animation return types to a Promise.
+ * Handles: Animation objects with .finished (Motion), thenables (GSAP), arrays, raw Promises.
+ */
+export function normalizeToPromise(value: unknown): Promise<unknown> | null {
+  if (!value) return null;
+  if (value instanceof Promise) return value;
+  if (typeof value === "object") {
+    // Motion: { finished: Promise }
+    if ("finished" in value) {
+      return (value as { finished: Promise<unknown> }).finished;
+    }
+    // GSAP and other thenables: { then: Function }
+    if ("then" in value && typeof (value as { then: unknown }).then === "function") {
+      return Promise.resolve(value);
+    }
+  }
+  if (Array.isArray(value)) {
+    const promises = value
+      .map(normalizeToPromise)
+      .filter((p): p is Promise<unknown> => p !== null);
+    return promises.length ? Promise.all(promises) : null;
+  }
+  return null;
+}
 
 /**
  * Segment text into grapheme clusters (properly handles emoji, accented chars, etc.)
@@ -464,7 +500,8 @@ export function splitText(
     lineClass = "split-line",
     autoSplit = false,
     onResize,
-    revertOnComplete,
+    onSplit,
+    revertOnComplete = false,
     propIndex = false,
     willChange = false,
   }: SplitTextOptions = {}
@@ -663,23 +700,27 @@ export function splitText(
     }
   }
 
-  // Setup revertOnComplete if provided
-  if (revertOnComplete !== undefined) {
-    if (revertOnComplete instanceof Promise) {
-      revertOnComplete
-        .then(() => {
-          if (isActive) {
-            revert();
-          }
-        })
-        .catch((err) => {
-          console.warn("SplitText: revertOnComplete promise rejected:", err);
-        });
-    } else {
-      console.warn(
-        "SplitText: revertOnComplete must be a Promise. " +
-          "Pass the animation promise (e.g., animate(...).finished)"
-      );
+  // Call onSplit callback and handle revertOnComplete
+  if (onSplit) {
+    const animationResult = onSplit({
+      chars: currentChars,
+      words: currentWords,
+      lines: currentLines,
+    });
+
+    if (revertOnComplete) {
+      const promise = normalizeToPromise(animationResult);
+      if (promise) {
+        promise
+          .then(() => {
+            if (isActive) {
+              revert();
+            }
+          })
+          .catch(() => {
+            console.warn("[fetta] Animation rejected, text not reverted");
+          });
+      }
     }
   }
 

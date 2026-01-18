@@ -76,6 +76,23 @@ export function ScrollTriggered() {
   );
 }
 
+export function AutoRevert() {
+  return (
+    <SplitText
+      onSplit={({ words }) =>
+        animate(
+          words,
+          { opacity: [0, 1], y: [20, 0] },
+          { delay: stagger(0.05) },
+        )
+      }
+      revertOnComplete
+    >
+      <h2 className="text-3xl font-bold my-0!">Auto-revert after animation</h2>
+    </SplitText>
+  );
+}
+
 // Vanilla examples using splitText directly
 
 export function BasicFadeInVanilla() {
@@ -138,23 +155,28 @@ export function LineByLineVanilla() {
   );
 }
 
+const AUTO_REVERT_TEXT = "Auto-revert after animation";
+
 export function AutoRevertVanilla() {
   const ref = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     if (!ref.current) return;
-    const { words } = splitText(ref.current);
-    const animation = animate(
-      words,
-      { opacity: [0, 1], y: [20, 0] },
-      { delay: stagger(0.05) },
-    );
-    splitText(ref.current, { revertOnComplete: animation.finished });
+
+    // Reset to original text before splitting (handles React StrictMode double-execution)
+    ref.current.textContent = AUTO_REVERT_TEXT;
+
+    const result = splitText(ref.current, {
+      onSplit: ({ words }) =>
+        animate(words, { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.05) }),
+      revertOnComplete: true,
+    });
+    return () => result.dispose();
   }, []);
 
   return (
     <h2 ref={ref} className="text-3xl font-bold my-0!">
-      Auto-revert after animation
+      {AUTO_REVERT_TEXT}
     </h2>
   );
 }

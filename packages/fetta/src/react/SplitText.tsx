@@ -1,4 +1,4 @@
-import { splitText, SplitTextResult } from "../core/splitText";
+import { splitText, normalizeToPromise } from "../core/splitText";
 import {
   cloneElement,
   forwardRef,
@@ -45,14 +45,11 @@ export interface SplitTextElements {
   revert: () => void;
 }
 
-/** Animation object with finished promise (e.g., from motion's animate()) */
-type AnimationWithFinished = { finished: Promise<unknown> };
-
 /** Return type for callbacks - void, single animation, array of animations, or promise */
 type CallbackReturn =
   | void
-  | AnimationWithFinished
-  | AnimationWithFinished[]
+  | { finished: Promise<unknown> }
+  | Array<{ finished: Promise<unknown> }>
   | Promise<unknown>;
 
 interface SplitTextProps {
@@ -75,34 +72,6 @@ interface SplitTextProps {
   onInView?: (result: SplitTextElements) => CallbackReturn;
   /** Called when element leaves viewport */
   onLeaveView?: (result: SplitTextElements) => CallbackReturn;
-}
-
-/**
- * Normalize callback return to a promise.
- * Handles: Animation, Animation[], Promise, or void
- */
-function normalizeToPromise(result: CallbackReturn): Promise<unknown> | null {
-  if (!result) return null;
-
-  // Array of animations
-  if (Array.isArray(result)) {
-    const promises = result.map((r) =>
-      "finished" in r ? r.finished : Promise.resolve(r)
-    );
-    return Promise.all(promises);
-  }
-
-  // Single animation with finished property
-  if (typeof result === "object" && "finished" in result) {
-    return result.finished;
-  }
-
-  // Already a promise
-  if (result instanceof Promise) {
-    return result;
-  }
-
-  return null;
 }
 
 /**
@@ -226,11 +195,15 @@ export const SplitText = forwardRef<HTMLDivElement, SplitTextProps>(
         if (!inViewRef.current && revertOnCompleteRef.current) {
           const promise = normalizeToPromise(callbackResult);
           if (promise) {
-            promise.then(() => {
-              if (!isMounted || hasRevertedRef.current) return;
-              result.revert();
-              hasRevertedRef.current = true;
-            });
+            promise
+              .then(() => {
+                if (!isMounted || hasRevertedRef.current) return;
+                result.revert();
+                hasRevertedRef.current = true;
+              })
+              .catch(() => {
+                console.warn("[fetta] Animation rejected, text not reverted");
+              });
           } else if (callbackResult === undefined) {
             // No warning if onSplit didn't return anything - user might be setting up state
           } else {
@@ -297,11 +270,15 @@ export const SplitText = forwardRef<HTMLDivElement, SplitTextProps>(
       const promise = normalizeToPromise(callbackResult);
 
       if (revertOnCompleteRef.current && promise) {
-        promise.then(() => {
-          if (hasRevertedRef.current) return;
-          splitResultRef.current?.revert();
-          hasRevertedRef.current = true;
-        });
+        promise
+          .then(() => {
+            if (hasRevertedRef.current) return;
+            splitResultRef.current?.revert();
+            hasRevertedRef.current = true;
+          })
+          .catch(() => {
+            console.warn("[fetta] Animation rejected, text not reverted");
+          });
       }
     } else if (!isInView && onLeaveViewRef.current && splitResultRef.current) {
       onLeaveViewRef.current(splitResultRef.current);
