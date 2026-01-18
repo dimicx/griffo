@@ -139,13 +139,18 @@ export function normalizeToPromise(value: unknown): Promise<unknown> | null {
   return null;
 }
 
+// Module-level cache for Intl.Segmenter
+let segmenterCache: Intl.Segmenter | null = null;
+
 /**
  * Segment text into grapheme clusters (properly handles emoji, accented chars, etc.)
  * Uses Intl.Segmenter for modern browsers.
  */
 function segmentGraphemes(text: string): string[] {
-  const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
-  return [...segmenter.segment(text)].map((s) => s.segment);
+  if (!segmenterCache) {
+    segmenterCache = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+  }
+  return [...segmenterCache.segment(text)].map((s) => s.segment);
 }
 
 /**

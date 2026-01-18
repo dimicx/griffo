@@ -315,6 +315,8 @@ export const SplitText = forwardRef<HTMLDivElement, SplitTextProps>(
       if (revertFnRef.current) {
         revertFnRef.current();
       }
+      // Reset for StrictMode remount
+      hasSplitRef.current = false;
     };
   }, [childElement, autoSplit]);
 
