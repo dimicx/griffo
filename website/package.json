@@ -12,6 +12,7 @@
     "fetta": "workspace:*",
     "fumadocs-core": "^16.0.3",
     "fumadocs-ui": "^16.0.3",
+    "gsap": "^3.14.2",
     "motion": "^12.26.1",
     "next": "^16.0.0",
     "react": "19.2.3",

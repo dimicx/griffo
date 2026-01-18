@@ -1,17 +1,19 @@
 ---
-title: Examples
-description: Common animation patterns with Fetta.
+title: React Examples
+description: Common animation patterns with Fetta and React.
 ---
 
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import { BasicFadeIn, CharacterReveal, LineByLine, ScrollTriggered } from "../../app/components/examples";
 import { ExampleWrapper } from "../../app/components/example-wrapper";
 
-# Examples
+# React Examples
 
-Common animation patterns with Fetta.
+Common animation patterns using the `SplitText` React component.
 
 ## Basic Fade In
+
+The `onSplit` callback fires after the text is split, giving you access to the split elements for animation.
 
 <Tabs items={['Preview', 'Code']}>
   <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
@@ -40,6 +42,8 @@ Common animation patterns with Fetta.
 
 ## Character Reveal
 
+Access `chars` instead of `words` to animate each character individually. Use shorter delays for smoother character animations.
+
 <Tabs items={['Preview', 'Code']}>
   <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
     <div className="bg-fd-card rounded-xl">
@@ -66,6 +70,8 @@ Common animation patterns with Fetta.
 </Tabs>
 
 ## Line by Line
+
+Lines are detected based on actual rendered positions, so this works with any text that wraps naturally. Great for paragraphs and longer content.
 
 <Tabs items={['Preview', 'Code']}>
   <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
@@ -96,6 +102,8 @@ Common animation patterns with Fetta.
 </Tabs>
 
 ## Scroll-Triggered
+
+Use `inView` to detect when the element enters the viewport, and `onInView` to trigger the animation. Set elements to invisible in `onSplit` so they're hidden until the scroll trigger fires.
 
 <Tabs items={['Preview', 'Code']}>
   <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">

@@ -8,6 +8,7 @@
     "api/core",
     "api/react",
     "---Guides---",
-    "examples"
+    "examples-react",
+    "examples-vanilla"
   ]
 }

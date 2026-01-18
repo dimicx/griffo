@@ -593,12 +593,20 @@ export function splitText(
     } else {
       let skipFirst = true;
 
+      // Helper to get line structure fingerprint (text content of each line)
+      const getLineFingerprint = (lines: HTMLSpanElement[]): string => {
+        return lines.map((line) => line.textContent || "").join("\n");
+      };
+
       const handleResize = () => {
         if (!isActive) return;
 
         const currentWidth = target.offsetWidth;
         if (currentWidth === lastWidth) return;
         lastWidth = currentWidth;
+
+        // Capture current line structure before re-splitting
+        const previousFingerprint = getLineFingerprint(currentLines);
 
         // Restore original HTML
         element.innerHTML = originalHTML;
@@ -626,8 +634,9 @@ export function splitText(
           currentWords = result.words;
           currentLines = result.lines;
 
-          // Trigger callback if provided
-          if (onResize) {
+          // Only trigger callback if lines actually changed
+          const newFingerprint = getLineFingerprint(result.lines);
+          if (onResize && newFingerprint !== previousFingerprint) {
             onResize({
               chars: result.chars,
               words: result.words,

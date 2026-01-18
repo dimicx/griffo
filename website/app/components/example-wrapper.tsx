@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useRef, type ReactNode } from "react";
+import { motion } from "motion/react";
 
 function ReplayIcon() {
   return (
@@ -40,6 +41,83 @@ export function ExampleWrapper({ children }: { children: ReactNode }) {
       </div>
       <div key={key} className="w-full h-full flex items-center justify-center">
         {children}
+      </div>
+    </div>
+  );
+}
+
+function DragHandle() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="9" cy="12" r="1" />
+      <circle cx="9" cy="5" r="1" />
+      <circle cx="9" cy="19" r="1" />
+      <circle cx="15" cy="12" r="1" />
+      <circle cx="15" cy="5" r="1" />
+      <circle cx="15" cy="19" r="1" />
+    </svg>
+  );
+}
+
+export function ResizableExampleWrapper({ children }: { children: ReactNode }) {
+  const [key, setKey] = useState(0);
+  const [width, setWidth] = useState(50);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  return (
+    <div className="relative w-full h-[240px] lg:h-[300px]">
+      <div className="empty:hidden absolute top-3 right-2 z-2 backdrop-blur-lg rounded-lg text-fd-muted-foreground">
+        <button
+          type="button"
+          onClick={() => setKey((k) => k + 1)}
+          className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors duration-100 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring p-1 [&_svg]:size-4 hover:text-fd-accent-foreground"
+          aria-label="Replay animation"
+        >
+          <ReplayIcon />
+        </button>
+      </div>
+      <div
+        ref={containerRef}
+        className="w-full h-full flex items-center justify-start"
+      >
+        <div
+          className="relative h-full flex items-center border-r border-dashed border-fd-border"
+          style={{ width: `${width}%` }}
+        >
+          <div
+            key={key}
+            className="w-full h-full flex items-center justify-center px-4"
+          >
+            {children}
+          </div>
+          <motion.div
+            drag="x"
+            dragMomentum={false}
+            dragElastic={0}
+            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+            onDrag={(_, info) => {
+              if (!containerRef.current) return;
+              const containerWidth = containerRef.current.offsetWidth;
+              const deltaPercent = (info.delta.x / containerWidth) * 100;
+              setWidth((w) => Math.max(30, Math.min(100, w + deltaPercent)));
+            }}
+            className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 z-10 cursor-ew-resize p-1 rounded bg-fd-secondary text-fd-muted-foreground hover:text-fd-accent-foreground hover:bg-fd-accent transition-colors"
+            aria-label="Drag to resize"
+          >
+            <DragHandle />
+          </motion.div>
+        </div>
       </div>
     </div>
   );
