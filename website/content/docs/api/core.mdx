@@ -29,7 +29,8 @@ const { chars, words, lines } = splitText(element, options);
 | `lineClass` | `string` | `"split-line"` | CSS class for line spans |
 | `autoSplit` | `boolean` | `false` | Re-split on container resize |
 | `onResize` | `function` | — | Callback after re-split |
-| `revertOnComplete` | `Promise` | — | Auto-revert when promise resolves |
+| `onSplit` | `function` | — | Callback after initial split. Return animation for `revertOnComplete` |
+| `revertOnComplete` | `boolean` | `false` | Auto-revert when `onSplit` animation completes |
 | `propIndex` | `boolean` | `false` | Add `--char-index`, `--word-index`, `--line-index` CSS variables |
 | `willChange` | `boolean` | `false` | Add `will-change: transform, opacity` hint |
 
@@ -40,8 +41,7 @@ interface SplitTextResult {
   chars: HTMLSpanElement[];   // Character elements
   words: HTMLSpanElement[];   // Word elements
   lines: HTMLSpanElement[];   // Line elements
-  revert: () => void;         // Restore original HTML
-  dispose: () => void;        // Cleanup observers
+  revert: () => void;         // Restore original HTML and cleanup
 }
 ```
 
@@ -62,30 +62,26 @@ animate(result.words, { opacity: [0, 1] });
 
 ### With Auto-Revert
 
-Pass a Promise to `revertOnComplete` to restore the original HTML when it resolves.
+Use `onSplit` to run your animation and `revertOnComplete` to restore the original HTML when it finishes.
 
 ```ts title="main.ts"
-const animation = animate(words, { opacity: [0, 1] });
-
 splitText(element, {
-  revertOnComplete: animation.finished
+  onSplit: ({ words }) => animate(words, { opacity: [0, 1] }),
+  revertOnComplete: true
 });
 ```
 
 ### Responsive Split
 
-Enable `autoSplit` to re-split text when the container resizes. Call `dispose()` to cleanup observers when done.
+Enable `autoSplit` to re-split text when the container resizes. Observers auto-cleanup when the element is removed from DOM.
 
 ```ts title="main.ts"
-const result = splitText(element, {
+splitText(element, {
   autoSplit: true,
   onResize: ({ lines }) => {
     animate(lines, { opacity: [0, 1] });
   }
 });
-
-// Cleanup when done
-result.dispose();
 ```
 
 ### With CSS Variables

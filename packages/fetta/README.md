@@ -74,7 +74,8 @@ const result = splitTxt(element, {
   lineClass: 'split-line',   // Class for line spans
   autoSplit: false,          // Re-split on container resize
   onResize: (result) => {},  // Callback after re-split
-  revertOnComplete: promise, // Auto-revert when promise resolves
+  onSplit: (result) => {},   // Callback after initial split (return animation for revertOnComplete)
+  revertOnComplete: false,   // Auto-revert when onSplit animation completes
   propIndex: false,          // Add --char-index CSS variables
   willChange: false,         // Add will-change hint
 });
@@ -83,8 +84,7 @@ const result = splitTxt(element, {
 result.chars;  // HTMLSpanElement[]
 result.words;  // HTMLSpanElement[]
 result.lines;  // HTMLSpanElement[]
-result.revert();  // Restore original HTML
-result.dispose(); // Cleanup observers
+result.revert();  // Restore original HTML and cleanup
 ```
 
 ### SplitTxt (React)
@@ -139,16 +139,13 @@ React component wrapper with automatic lifecycle management.
 ### Responsive Text
 
 ```typescript
-// Vanilla
-const result = splitTxt(element, {
+// Vanilla - auto-cleans when element is removed from DOM
+splitTxt(element, {
   autoSplit: true,
   onResize: ({ lines }) => {
     animate(lines, { opacity: [0, 1] });
   }
 });
-
-// Cleanup when done
-result.dispose();
 ```
 
 ```tsx
@@ -171,9 +168,9 @@ result.dispose();
 
 ```typescript
 // Vanilla
-const animation = animate(words, { opacity: [0, 1] });
 splitTxt(element, {
-  revertOnComplete: animation.finished
+  onSplit: ({ words }) => animate(words, { opacity: [0, 1] }),
+  revertOnComplete: true
 });
 ```
 
@@ -181,9 +178,7 @@ splitTxt(element, {
 // React
 <SplitTxt
   revertOnComplete
-  onSplit={({ words }) => {
-    return animate(words, { opacity: [0, 1] }).finished;
-  }}
+  onSplit={({ words }) => animate(words, { opacity: [0, 1] })}
 >
   <h1>Text</h1>
 </SplitTxt>

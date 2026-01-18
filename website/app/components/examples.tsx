@@ -166,12 +166,11 @@ export function AutoRevertVanilla() {
     // Reset to original text before splitting (handles React StrictMode double-execution)
     ref.current.textContent = AUTO_REVERT_TEXT;
 
-    const result = splitText(ref.current, {
+    splitText(ref.current, {
       onSplit: ({ words }) =>
         animate(words, { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.05) }),
       revertOnComplete: true,
     });
-    return () => result.dispose();
   }, []);
 
   return (
@@ -212,7 +211,7 @@ export function ResponsiveSplitVanilla() {
         { delay: stagger(0.08), duration: 0.4 },
       );
     }
-    return () => resultRef.current?.dispose();
+    return () => resultRef.current?.revert();
   }, []);
 
   return (

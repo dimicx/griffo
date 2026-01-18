@@ -170,8 +170,8 @@ export const SplitText = forwardRef<HTMLDivElement, SplitTextProps>(
         },
       });
 
-      // Store dispose function
-      revertFnRef.current = result.dispose;
+      // Store revert function for cleanup
+      revertFnRef.current = result.revert;
 
       hasSplitRef.current = true;
 

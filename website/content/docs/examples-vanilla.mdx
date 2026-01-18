@@ -158,8 +158,8 @@ const result = splitText(element, {
   }
 });
 
-// Cleanup when done
-result.dispose();
+// Cleanup when done (optional - auto-cleans when element removed from DOM)
+result.revert();
 ```
   </Tab>
 </Tabs>

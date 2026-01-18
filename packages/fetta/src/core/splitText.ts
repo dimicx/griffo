@@ -43,10 +43,8 @@ export interface SplitTextResult {
   chars: HTMLSpanElement[];
   words: HTMLSpanElement[];
   lines: HTMLSpanElement[];
-  /** Revert the element to its original state */
+  /** Revert the element to its original state and cleanup observers */
   revert: () => void;
-  /** Cleanup observers and timers (must be called when using autoSplit) */
-  dispose: () => void;
 }
 
 interface MeasuredChar {
@@ -519,7 +517,6 @@ export function splitText(
       words: [],
       lines: [],
       revert: () => {},
-      dispose: () => {},
     };
   }
 
@@ -638,6 +635,12 @@ export function splitText(
       const handleResize = () => {
         if (!isActive) return;
 
+        // Auto-dispose if element was removed from DOM
+        if (!element.isConnected) {
+          dispose();
+          return;
+        }
+
         const currentWidth = target.offsetWidth;
         if (currentWidth === lastWidth) return;
         lastWidth = currentWidth;
@@ -729,6 +732,5 @@ export function splitText(
     words: currentWords,
     lines: currentLines,
     revert,
-    dispose,
   };
 }
