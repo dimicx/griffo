@@ -225,6 +225,24 @@ export function MaskedLineReveal() {
   );
 }
 
+export function EmojiSupport() {
+  return (
+    <SplitText
+      onSplit={({ chars }) => {
+        animate(
+          chars,
+          { opacity: [0, 1], scale: [0.5, 1] },
+          { delay: stagger(0.05), duration: 0.3 },
+        );
+      }}
+    >
+      <p className="text-3xl text-center">
+        Family: 👨‍👩‍👧‍👦 Flag: 🇯🇵 Skin: 👋🏽
+      </p>
+    </SplitText>
+  );
+}
+
 export function ResponsiveSplit() {
   return (
     <div className="w-full">
