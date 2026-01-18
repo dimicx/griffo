@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { splitText, type SplitTextResult } from "fetta";
 import { SplitText } from "fetta/react";
-import { animate, stagger, scroll } from "motion";
+import { animate, stagger, scroll, inView } from "motion";
 import gsap from "gsap";
 
 function StatusIndicator({ status }: { status: "animating" | "reverted" }) {
@@ -93,9 +93,12 @@ export function ScrollTriggered() {
       <div className="flex items-center justify-center h-full">
         <SplitText
           onSplit={({ words }) => {
-            words.forEach((w) => (w.style.opacity = "0"));
+            words.forEach((w) => {
+              w.style.opacity = "0";
+              w.style.transform = "translateY(30px)";
+            });
           }}
-          inView={{ amount: 0.5, once: true }}
+          inView={{ amount: 0.5 }}
           onInView={({ words }) =>
             animate(
               words,
@@ -103,6 +106,12 @@ export function ScrollTriggered() {
               { delay: stagger(0.03) },
             )
           }
+          onLeaveView={({ words }) => {
+            words.forEach((w) => {
+              w.style.opacity = "0";
+              w.style.transform = "translateY(30px)";
+            });
+          }}
         >
           <h2 className="text-2xl font-bold my-0!">Reveals on scroll</h2>
         </SplitText>
@@ -444,26 +453,33 @@ export function ScrollTriggeredVanilla() {
     textRef.current.textContent = SCROLL_TRIGGERED_TEXT;
 
     const { words } = splitText(textRef.current);
-    words.forEach((w) => (w.style.opacity = "0"));
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            animate(
-              words,
-              { opacity: [0, 1], y: [30, 0] },
-              { delay: stagger(0.03) },
-            );
-            observer.disconnect();
-          }
-        });
+    // Set initial hidden state
+    words.forEach((w) => {
+      w.style.opacity = "0";
+      w.style.transform = "translateY(30px)";
+    });
+
+    const cleanup = inView(
+      textRef.current,
+      () => {
+        animate(
+          words,
+          { opacity: [0, 1], y: [30, 0] },
+          { delay: stagger(0.03) },
+        );
+        // Reset styles when leaving view
+        return () => {
+          words.forEach((w) => {
+            w.style.opacity = "0";
+            w.style.transform = "translateY(30px)";
+          });
+        };
       },
-      { root: containerRef.current, threshold: 0.5 },
+      { root: containerRef.current, amount: 0.5 },
     );
 
-    observer.observe(textRef.current);
-    return () => observer.disconnect();
+    return cleanup;
   }, []);
 
   return (

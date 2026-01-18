@@ -200,7 +200,7 @@ result.revert();
 
 ## Scroll-Triggered
 
-Use `IntersectionObserver` to detect when the element enters the viewport and trigger the animation. Set elements to invisible after splitting so they're hidden until the scroll trigger fires.
+Use Motion's `inView` to detect when the element enters the viewport and trigger the animation. Return a cleanup function to reset styles when the element leaves view.
 
 <Tabs items={['Preview', 'Code']}>
   <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
@@ -213,25 +213,28 @@ Use `IntersectionObserver` to detect when the element enters the viewport and tr
   <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
 ```ts
 import { splitText } from 'fetta';
-import { animate, stagger } from 'motion';
+import { animate, stagger, inView } from 'motion';
 
 const element = document.querySelector('h1');
 const { words } = splitText(element);
 
 // Hide words initially
-words.forEach(w => w.style.opacity = '0');
+words.forEach(w => {
+  w.style.opacity = '0';
+  w.style.transform = 'translateY(30px)';
+});
 
 // Trigger animation when element enters viewport
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      animate(words, { opacity: [0, 1], y: [30, 0] }, { delay: stagger(0.03) });
-      observer.disconnect();
-    }
-  });
-}, { threshold: 0.5 });
-
-observer.observe(element);
+inView(element, () => {
+  animate(words, { opacity: [0, 1], y: [30, 0] }, { delay: stagger(0.03) });
+  // Reset styles when leaving view
+  return () => {
+    words.forEach(w => {
+      w.style.opacity = '0';
+      w.style.transform = 'translateY(30px)';
+    });
+  };
+}, { amount: 0.5 });
 ```
   </Tab>
 </Tabs>

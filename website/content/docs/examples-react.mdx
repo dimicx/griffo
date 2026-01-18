@@ -189,7 +189,7 @@ Set `revertOnComplete` to automatically restore the original HTML when the anima
 
 ## Scroll-Triggered
 
-Use `inView` to detect when the element enters the viewport, and `onInView` to trigger the animation. Set elements to invisible in `onSplit` so they're hidden until the scroll trigger fires.
+Use `inView` to detect when the element enters the viewport, and `onInView` to trigger the animation. Set elements to invisible in `onSplit` so they're hidden until the scroll trigger fires. Use `onLeaveView` to reset styles when scrolling away.
 
 <Tabs items={['Preview', 'Code']}>
   <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
@@ -203,12 +203,21 @@ Use `inView` to detect when the element enters the viewport, and `onInView` to t
 ```tsx
 <SplitText
   onSplit={({ words }) => {
-    words.forEach(w => w.style.opacity = '0');
+    words.forEach(w => {
+      w.style.opacity = '0';
+      w.style.transform = 'translateY(30px)';
+    });
   }}
-  inView={{ amount: 0.5, once: true }}
+  inView={{ amount: 0.5 }}
   onInView={({ words }) =>
     animate(words, { opacity: [0, 1], y: [30, 0] }, { delay: stagger(0.03) })
   }
+  onLeaveView={({ words }) => {
+    words.forEach(w => {
+      w.style.opacity = '0';
+      w.style.transform = 'translateY(30px)';
+    });
+  }}
 >
   <h2>Reveals on scroll</h2>
 </SplitText>
