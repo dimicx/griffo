@@ -38,12 +38,20 @@ interface InViewOptions {
   once?: boolean;
 }
 
-/** Result passed to callbacks, includes revert for manual control */
+/**
+ * Result passed to SplitText callbacks (onSplit, onInView, onLeaveView, onResize).
+ *
+ * Contains arrays of split elements and a revert function for manual control.
+ * Empty arrays are returned for split types not requested in options.
+ */
 export interface SplitTextElements {
+  /** Array of character span elements */
   chars: HTMLSpanElement[];
+  /** Array of word span elements */
   words: HTMLSpanElement[];
+  /** Array of line span elements */
   lines: HTMLSpanElement[];
-  /** Revert to original HTML (manual control) */
+  /** Revert to original HTML and cleanup observers */
   revert: () => void;
 }
 
@@ -77,9 +85,57 @@ interface SplitTextProps {
 }
 
 /**
- * React component wrapper for the splitText function.
- * Uses the optimized splitText that handles kerning compensation
- * and dash splitting in a single pass.
+ * React component wrapper for text splitting with kerning compensation.
+ *
+ * Wraps a single child element and splits its text content into characters,
+ * words, and/or lines. Handles lifecycle cleanup automatically on unmount.
+ *
+ * @param props - Component props including callbacks and options
+ * @returns The child element wrapped in a container div
+ *
+ * @example
+ * ```tsx
+ * import { SplitText } from "fetta/react";
+ * import { animate, stagger } from "motion";
+ *
+ * // Basic animation
+ * <SplitText
+ *   onSplit={({ words }) => {
+ *     animate(words, { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.05) });
+ *   }}
+ * >
+ *   <h1>Animated Text</h1>
+ * </SplitText>
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Scroll-triggered with auto-revert
+ * <SplitText
+ *   onSplit={({ chars }) => {
+ *     chars.forEach(c => c.style.opacity = "0");
+ *   }}
+ *   inView={{ amount: 0.5, once: true }}
+ *   onInView={({ chars }) =>
+ *     animate(chars, { opacity: 1 }, { delay: stagger(0.02) })
+ *   }
+ *   revertOnComplete
+ * >
+ *   <p>Reveals on scroll, reverts after animation</p>
+ * </SplitText>
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // Responsive re-splitting
+ * <SplitText
+ *   autoSplit
+ *   onSplit={({ lines }) => animate(lines, { opacity: [0, 1] })}
+ *   onResize={({ lines }) => animate(lines, { opacity: [0, 1] })}
+ * >
+ *   <p>Re-animates when container resizes</p>
+ * </SplitText>
+ * ```
  */
 export const SplitText = forwardRef<HTMLDivElement, SplitTextProps>(
   function SplitText(

@@ -4,6 +4,19 @@
  * then detects lines based on actual rendered positions.
  */
 
+/**
+ * Configuration options for the splitText function.
+ *
+ * @example
+ * ```typescript
+ * const options: SplitTextOptions = {
+ *   type: "chars,words,lines",
+ *   charClass: "char",
+ *   mask: "lines",
+ *   autoSplit: true,
+ * };
+ * ```
+ */
 export interface SplitTextOptions {
   /** Split type: chars, words, lines, or combinations like "chars,words" */
   type?:
@@ -41,11 +54,20 @@ export interface SplitTextOptions {
   willChange?: boolean;
 }
 
+/**
+ * Result returned by splitText containing arrays of split elements and a revert function.
+ *
+ * Each array contains the created span elements. Empty arrays are returned for
+ * split types not requested (e.g., if `type: "words"`, chars and lines will be empty).
+ */
 export interface SplitTextResult {
+  /** Array of character span elements (empty if chars not in type) */
   chars: HTMLSpanElement[];
+  /** Array of word span elements (empty if words not in type) */
   words: HTMLSpanElement[];
+  /** Array of line span elements (empty if lines not in type) */
   lines: HTMLSpanElement[];
-  /** Revert the element to its original state and cleanup observers */
+  /** Revert the element to its original HTML and cleanup all observers/timers */
   revert: () => void;
 }
 
@@ -73,7 +95,27 @@ const BREAK_CHARS = new Set([
 
 /**
  * Normalize various animation return types to a Promise.
- * Handles: Animation objects with .finished (Motion), thenables (GSAP), arrays, raw Promises.
+ *
+ * Handles multiple animation library formats:
+ * - Motion: objects with `.finished` property (Promise)
+ * - GSAP: thenables with `.then()` method
+ * - Arrays: waits for all animations via Promise.all
+ * - Raw Promises: returned as-is
+ *
+ * @param value - Animation result from onSplit callback (Motion animation, GSAP timeline, Promise, or array)
+ * @returns Promise that resolves when animation completes, or null if value is not a recognized animation type
+ *
+ * @example
+ * ```typescript
+ * // Motion animation
+ * const promise = normalizeToPromise(animate(el, { opacity: 1 }));
+ *
+ * // GSAP timeline
+ * const promise = normalizeToPromise(gsap.to(el, { opacity: 1 }));
+ *
+ * // Array of animations
+ * const promise = normalizeToPromise([anim1, anim2]);
+ * ```
  */
 export function normalizeToPromise(value: unknown): Promise<unknown> | null {
   if (!value) return null;
@@ -556,6 +598,52 @@ function performSplit(
 
 /**
  * Split text into characters, words, and lines with kerning compensation.
+ *
+ * Fetta measures character positions before splitting, then applies margin adjustments
+ * after splitting to preserve the original kerning (letter spacing). This prevents
+ * the visual "jumping" that occurs with naive text splitting.
+ *
+ * @param element - The HTML element containing text to split. Must have text content.
+ * @param options - Configuration options for splitting behavior
+ * @returns Object containing arrays of split elements and a revert function
+ *
+ * @throws {Error} If element is not an HTMLElement
+ *
+ * @example
+ * ```typescript
+ * import { splitText } from "fetta";
+ * import { animate, stagger } from "motion";
+ *
+ * // Basic usage
+ * const { chars, words, lines, revert } = splitText(element);
+ *
+ * // Animate words
+ * animate(words, { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.05) });
+ *
+ * // Revert to original HTML when done
+ * revert();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Auto-revert after animation completes
+ * splitText(element, {
+ *   onSplit: ({ words }) => animate(words, { opacity: [0, 1] }),
+ *   revertOnComplete: true,
+ * });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Responsive re-splitting
+ * splitText(element, {
+ *   autoSplit: true,
+ *   onResize: ({ lines }) => {
+ *     // Re-animate after resize
+ *     animate(lines, { opacity: [0, 1] });
+ *   },
+ * });
+ * ```
  */
 export function splitText(
   element: HTMLElement,
