@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-ibm-plex-mono);
+  --font-quantico: var(--font-quantico);
+  --font-serif: var(--font-serif);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-medium;
+}
+
+.css-only-example .split-char {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: css-fade-in 0.4s ease forwards;
+  animation-delay: calc(var(--char-index) * 0.03s);
+}
+
+@keyframes css-fade-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+button[aria-label="Copy Text"] {
+  @apply cursor-pointer active:scale-95 transition-all duration-100 ease-out will-change-transform;
+}

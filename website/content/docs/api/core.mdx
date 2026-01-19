@@ -1,0 +1,126 @@
+---
+title: splitText()
+description: The core function for splitting text into characters, words, and lines.
+---
+
+# splitText()
+
+The core function for splitting text into characters, words, and lines.
+
+```ts title="main.ts"
+import { splitText } from 'fetta';
+
+const { chars, words, lines } = splitText(element, options);
+```
+
+## Parameters
+
+### element
+
+`HTMLElement` — The DOM element containing text to split.
+
+### options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `type` | `string` | `"chars,words,lines"` | What to split: `"chars"`, `"words"`, `"lines"`, or combinations |
+| `charClass` | `string` | `"split-char"` | CSS class for character spans |
+| `wordClass` | `string` | `"split-word"` | CSS class for word spans |
+| `lineClass` | `string` | `"split-line"` | CSS class for line spans |
+| `mask` | `string` | — | Wrap elements in `overflow: clip` container: `"chars"`, `"words"`, or `"lines"` |
+| `autoSplit` | `boolean` | `false` | Re-split on container resize |
+| `onResize` | `function` | — | Callback after re-split |
+| `onSplit` | `function` | — | Callback after initial split. Return animation for `revertOnComplete` |
+| `revertOnComplete` | `boolean` | `false` | Auto-revert when `onSplit` animation completes |
+| `propIndex` | `boolean` | `false` | Add `--char-index`, `--word-index`, `--line-index` CSS variables |
+| `willChange` | `boolean` | `false` | Add `will-change: transform, opacity` hint |
+
+## Return Value
+
+```ts
+interface SplitTextResult {
+  chars: HTMLSpanElement[];   // Character elements
+  words: HTMLSpanElement[];   // Word elements
+  lines: HTMLSpanElement[];   // Line elements
+  revert: () => void;         // Restore original HTML and cleanup
+}
+```
+
+## Examples
+
+### Basic Split
+
+Split text and animate the result with any animation library.
+
+```ts title="main.ts"
+import { splitText } from 'fetta';
+import { animate } from 'motion';
+
+const result = splitText(element);
+
+animate(result.words, { opacity: [0, 1] });
+```
+
+### With Auto-Revert
+
+Use `onSplit` to run your animation and `revertOnComplete` to restore the original HTML when it finishes.
+
+```ts title="main.ts"
+splitText(element, {
+  onSplit: ({ words }) => animate(words, { opacity: [0, 1] }),
+  revertOnComplete: true
+});
+```
+
+### Responsive Split
+
+Enable `autoSplit` to re-split text when the container resizes. Observers auto-cleanup when the element is removed from DOM.
+
+```ts title="main.ts"
+splitText(element, {
+  autoSplit: true,
+  onResize: ({ lines }) => {
+    animate(lines, { opacity: [0, 1] });
+  }
+});
+```
+
+### Masked Reveal
+
+Use `mask` to wrap elements in a clipping container for clean reveal animations. Content can slide into view from outside its bounds.
+
+```ts title="main.ts"
+splitText(element, {
+  type: 'lines',
+  mask: 'lines',
+  onSplit: ({ lines }) => {
+    animate(lines, { y: ['100%', '0%'] }, { delay: stagger(0.1) });
+  }
+});
+```
+
+### Nested HTML Elements
+
+Fetta preserves inline elements like `<a>`, `<em>`, `<strong>` when splitting. All attributes (href, class, data-*, etc.) are maintained.
+
+```ts title="main.ts"
+// HTML: <p>Click <a href="/signup" class="link">here</a> to get started</p>
+const { chars } = splitText(element);
+
+// The <a> tag wraps the split characters, preserving href and class
+animate(chars, { opacity: [0, 1] }, { delay: stagger(0.02) });
+```
+
+### With CSS Variables
+
+Enable `propIndex` to add `--char-index`, `--word-index`, and `--line-index` CSS variables to each element.
+
+```ts title="main.ts"
+splitText(element, { propIndex: true });
+```
+
+```css title="styles.css"
+.split-char {
+  animation-delay: calc(var(--char-index) * 0.05s);
+}
+```

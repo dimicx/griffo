@@ -1,0 +1,48 @@
+---
+title: Introduction
+description: Text splitting for animations — without the jank.
+---
+
+import { FettaDefinition } from "../../app/components/fetta-definition";
+
+# Introduction
+
+Text splitting for animations — without the jank.
+
+<FettaDefinition />
+
+## Why Fetta?
+
+Text splitting sounds simple: wrap each character in a span. But fonts have kerning — subtle spacing adjustments that make text look right — and most libraries destroy it. Characters shift, typography breaks.
+
+Fetta preserves original character positions, so your text looks exactly the same after splitting. Just animatable.
+
+{/* Video or GIF comparison here */}
+
+## Features
+
+- **Kerning Compensation** — Maintains original character spacing after splitting
+- **Nested Elements** — Preserves `<a>`, `<em>`, `<strong>` and other inline elements with all attributes
+- **Auto-Revert** — Restore original HTML after animations
+- **Line Detection** — Automatically groups words into lines
+- **Responsive AutoSplit** — Re-splits on container resize
+- **Built-in InView** — Viewport detection with `inView`, `onInView`, `onLeaveView`
+- **Emoji Support** — Properly handles compound emojis and complex Unicode characters
+- **Accessible** — Adds `aria-label` with original text for screen readers
+- **TypeScript** — Full type definitions included
+- **Framework Agnostic** — Works with vanilla JS, React, and any animation library
+
+## Quick Example
+
+```tsx title="App.tsx"
+import { SplitText } from 'fetta/react';
+import { animate, stagger } from 'motion';
+
+<SplitText
+  onSplit={({ chars }) => {
+    animate(chars, { opacity: [0, 1] }, { delay: stagger(0.02) });
+  }}
+>
+  <h1>Hello world</h1>
+</SplitText>
+```

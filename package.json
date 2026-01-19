@@ -1,0 +1,16 @@
+{
+  "name": "fetta-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "lib:build": "turbo build --filter=fetta",
+    "lib:dev": "turbo dev --filter=fetta"
+  },
+  "devDependencies": {
+    "turbo": "^2"
+  },
+  "packageManager": "pnpm@9.15.4"
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "---Basics---",
+    "index",
+    "installation",
+    "---API---",
+    "api/core",
+    "api/react",
+    "---Examples---",
+    "examples/react",
+    "examples/vanilla"
+  ]
+}

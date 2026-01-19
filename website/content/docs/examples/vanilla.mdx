@@ -1,0 +1,375 @@
+---
+title: Vanilla
+description: Common animation patterns with Fetta and vanilla JavaScript.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { BasicFadeInVanilla, CharacterRevealVanilla, LineByLineVanilla, NestedElementsVanilla, MaskedLineRevealVanilla, AutoRevertVanilla, ResponsiveSplitVanilla, ScrollTriggeredVanilla, ScrollDrivenVanilla, WithGSAPVanilla, CSSOnlyVanilla } from "../../../app/components/examples";
+import { ExampleWrapper, ResizableExampleWrapper } from "../../../app/components/example-wrapper";
+
+# Vanilla Examples
+
+Common animation patterns using the `splitText` function with vanilla JavaScript.
+
+## Basic Fade In
+
+Split text into words and animate each one with a staggered fade and slide effect.
+
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <BasicFadeInVanilla />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```ts
+import { splitText } from 'fetta';
+import { animate, stagger } from 'motion';
+
+const element = document.querySelector('p');
+const { words } = splitText(element);
+
+animate(
+  words,
+  { opacity: [0, 1], y: [20, 0] },
+  { delay: stagger(0.05), duration: 0.5 }
+);
+```
+  </Tab>
+</Tabs>
+
+## Character Reveal
+
+Animate each character individually for a more granular effect. Great for headings and short text.
+
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <CharacterRevealVanilla />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```ts
+import { splitText } from 'fetta';
+import { animate, stagger } from 'motion';
+
+const element = document.querySelector('p');
+const { chars } = splitText(element);
+
+animate(
+  chars,
+  { opacity: [0, 1], scale: [0.5, 1] },
+  { delay: stagger(0.02), duration: 0.3 }
+);
+```
+  </Tab>
+</Tabs>
+
+## Line by Line
+
+Animate each line separately. Lines are detected based on actual rendered positions, so this works with any text that wraps naturally.
+
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <LineByLineVanilla />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```ts
+import { splitText } from 'fetta';
+import { animate, stagger } from 'motion';
+
+const element = document.querySelector('p');
+const { lines } = splitText(element);
+
+animate(
+  lines,
+  { opacity: [0, 1], x: [-20, 0] },
+  { delay: stagger(0.1), duration: 0.6 }
+);
+```
+  </Tab>
+</Tabs>
+
+## Nested Elements
+
+Fetta preserves inline HTML elements like `<a>`, `<em>`, and `<strong>` when splitting text. All attributes (href, class, id, data-\*, etc.) are maintained on the split output.
+
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <NestedElementsVanilla />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```ts
+import { splitText } from 'fetta';
+import { animate, stagger } from 'motion';
+
+const element = document.querySelector('p');
+// HTML: Click <a href="#">this link</a> or see <em>emphasized</em> text
+
+const { chars } = splitText(element);
+
+animate(
+  chars,
+  { opacity: [0, 1], y: [10, 0] },
+  { delay: stagger(0.02), duration: 0.3 }
+);
+```
+  </Tab>
+</Tabs>
+
+## Masked Line Reveal
+
+Use the `mask` option to wrap elements in a clipping container with `overflow: clip`. This creates clean reveal animations where content slides into view from outside its bounds.
+
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <MaskedLineRevealVanilla />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```ts
+import { splitText } from 'fetta';
+import { animate, stagger } from 'motion';
+
+const element = document.querySelector('p');
+
+splitText(element, {
+  type: 'lines',
+  mask: 'lines',
+  onSplit: ({ lines }) => {
+    animate(
+      lines,
+      { y: ['100%', '0%'] },
+      { delay: stagger(0.1), duration: 0.5 }
+    );
+  }
+});
+```
+  </Tab>
+</Tabs>
+
+## With Auto-Revert
+
+Use `onSplit` with `revertOnComplete: true` to automatically restore the original HTML when the animation finishes. Return your animation from the callback - Fetta handles extracting the `.finished` promise.
+
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <AutoRevertVanilla />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```ts
+import { splitText } from 'fetta';
+import { animate, stagger } from 'motion';
+
+const element = document.querySelector('p');
+
+splitText(element, {
+  onSplit: ({ chars }) =>
+    animate(chars, { opacity: [0, 1], y: [10, 0] }, { delay: stagger(0.02), duration: 0.3 }),
+  revertOnComplete: true
+});
+```
+  </Tab>
+</Tabs>
+
+## Responsive Split
+
+Enable `autoSplit` to automatically re-split text when the container resizes. Use `onResize` to re-trigger animations when the text reflows to different lines.
+
+If you only want to animate once on load, skip `onResize` and trigger your animation externally. Fetta will still re-split the text on resize to maintain correct line detection, but won't call any callback.
+
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl overflow-hidden">
+      <ResizableExampleWrapper>
+        <ResponsiveSplitVanilla />
+      </ResizableExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```ts
+import { splitText } from 'fetta';
+import { animate, stagger } from 'motion';
+
+const element = document.querySelector('p');
+
+const result = splitText(element, {
+  autoSplit: true,
+  onResize: ({ lines }) => {
+    animate(
+      lines,
+      { opacity: [0, 1], y: [12, 0] },
+      { delay: stagger(0.08), duration: 0.4 }
+    );
+  }
+});
+
+// Cleanup when done (optional - auto-cleans when element removed from DOM)
+result.revert();
+```
+  </Tab>
+</Tabs>
+
+## Scroll-Triggered
+
+Use Motion's `inView` to detect when the element enters the viewport and trigger the animation. Return a cleanup function to reset styles when the element leaves view.
+
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <ScrollTriggeredVanilla />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```ts
+import { splitText } from 'fetta';
+import { animate, stagger, inView } from 'motion';
+
+const element = document.querySelector('p');
+const { words } = splitText(element);
+
+// Hide words initially
+words.forEach(w => {
+  w.style.opacity = '0';
+  w.style.transform = 'translateY(30px)';
+});
+
+// Trigger animation when element enters viewport
+inView(element, () => {
+  animate(words, { opacity: [0, 1], y: [30, 0] }, { delay: stagger(0.03) });
+  // Reset styles when leaving view
+  return () => {
+    words.forEach(w => {
+      w.style.opacity = '0';
+      w.style.transform = 'translateY(30px)';
+    });
+  };
+}, { amount: 0.5 });
+```
+  </Tab>
+</Tabs>
+
+## Scroll-Driven
+
+Link animations to scroll progress using Motion's `scroll()` function. The animation plays as the target element moves through the viewport.
+
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <ScrollDrivenVanilla />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```ts
+import { splitText } from 'fetta';
+import { animate, scroll } from 'motion';
+
+const target = document.querySelector('.text-container');
+const element = target.querySelector('p');
+const { words } = splitText(element);
+
+const animation = animate(
+  words.map((word, i) => [
+    word,
+    { opacity: [0, 1], y: [20, 0] },
+    { duration: 0.5, at: i * 0.1, ease: 'linear' }
+  ])
+);
+
+scroll(animation, { target, offset: ['start 85%', 'start 20%'] });
+```
+  </Tab>
+</Tabs>
+
+## With GSAP
+
+Fetta works with any animation library. Here's an example using GSAP.
+
+<Tabs items={['Preview', 'Code']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <WithGSAPVanilla />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="Code" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```ts
+import { splitText } from 'fetta';
+import gsap from 'gsap';
+
+const element = document.querySelector('p');
+const { words } = splitText(element);
+
+gsap.from(words, {
+  opacity: 0,
+  y: 30,
+  stagger: 0.05,
+  duration: 0.5,
+  ease: "power2.out"
+});
+```
+  </Tab>
+</Tabs>
+
+## CSS-Only Animation
+
+Use `propIndex` to add CSS variables (`--char-index`, `--word-index`, `--line-index`) to each element. Animate entirely with CSS — no JavaScript animation library needed.
+
+<Tabs items={['Preview', 'JS', 'CSS']}>
+  <Tab value="Preview" className="p-0 h-[240px] lg:h-[300px]">
+    <div className="bg-fd-card rounded-xl">
+      <ExampleWrapper>
+        <CSSOnlyVanilla />
+      </ExampleWrapper>
+    </div>
+  </Tab>
+  <Tab value="JS" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```ts
+import { splitText } from 'fetta';
+
+const element = document.querySelector('p');
+splitText(element, { propIndex: true });
+```
+  </Tab>
+  <Tab value="CSS" className="[&_figure]:h-[240px]! [&_figure]:lg:h-[300px]! [&_figure_[role=region]]:max-h-[240px]! [&_figure_[role=region]]:lg:max-h-[300px]!">
+```css
+.split-char {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fade-in 0.4s ease forwards;
+  animation-delay: calc(var(--char-index) * 0.03s);
+}
+
+@keyframes fade-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+```
+  </Tab>
+</Tabs>
