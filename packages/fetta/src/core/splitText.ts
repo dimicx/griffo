@@ -111,6 +111,11 @@ const INLINE_ELEMENTS = new Set([
   'samp', 'small', 'span', 'strong', 'sub', 'sup', 'time', 'u', 'var',
 ]);
 
+// Safari's Range API returns integer pixel values, breaking kerning compensation
+const isSafari = typeof navigator !== 'undefined' &&
+  /Safari/.test(navigator.userAgent) &&
+  !/Chrome/.test(navigator.userAgent);
+
 /**
  * Check if element contains any inline element descendants.
  * Used for early detection to skip ancestor tracking when not needed.
@@ -724,9 +729,10 @@ function performSplit(
       }
     }
 
-    // Apply kerning compensation (if splitting chars)
+    // Apply kerning compensation (if splitting chars and not Safari)
+    // Safari's Range API only returns integers, breaking the compensation
     // Use allChars array directly since char spans may be nested in ancestor wrappers
-    if (splitChars && allChars.length > 1) {
+    if (splitChars && allChars.length > 1 && !isSafari) {
       const positions = allChars.map((c) => c.getBoundingClientRect().left);
 
       for (let i = 1; i < allChars.length; i++) {
@@ -1065,11 +1071,21 @@ export function splitText(
     element.style.fontVariantLigatures = "none";
   }
 
+  // Safari workaround: disable font kerning when using revertOnComplete with chars
+  // Since we can't compensate for kerning in Safari, disabling it ensures
+  // the text doesn't shift when reverting to original HTML
+  if (isSafari && splitChars && revertOnComplete) {
+    element.style.fontKerning = "none";
+  }
+
   // Check once if we need to track nested inline elements (performance optimization)
   const trackAncestors = hasInlineDescendants(element);
 
+  // Skip char measurements in Safari (Range API returns integers, breaking kerning compensation)
+  const measureChars = splitChars && !isSafari;
+
   // STEP 1: Measure original character positions BEFORE modifying DOM
-  const measuredWords = measureOriginalText(element, splitChars, trackAncestors);
+  const measuredWords = measureOriginalText(element, measureChars, trackAncestors);
 
   // Perform the split
   const { chars, words, lines } = performSplit(
@@ -1120,6 +1136,11 @@ export function splitText(
       element.style.fontVariantLigatures = "none";
     }
 
+    // Keep font kerning disabled in Safari (prevents visual shift on revert)
+    if (isSafari && splitChars && revertOnComplete) {
+      element.style.fontKerning = "none";
+    }
+
     // Auto-dispose when reverted
     dispose();
   };
@@ -1164,7 +1185,7 @@ export function splitText(
           if (!isActive) return;
 
           // Re-measure and re-split (trackAncestors is stable since originalHTML doesn't change)
-          const newMeasuredWords = measureOriginalText(element, splitChars, trackAncestors);
+          const newMeasuredWords = measureOriginalText(element, measureChars, trackAncestors);
           const result = performSplit(
             element,
             newMeasuredWords,
