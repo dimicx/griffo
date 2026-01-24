@@ -83,7 +83,7 @@ export function KerningComparison() {
           <TextRow library="fetta" isSplit={isSplit} />
         </div>
 
-        <div className="flex items-center px-4 py-3 gap-2 border-t border-fd-border bg-fd-muted/30">
+        <div className="flex items-center justify-start px-4 py-3 border-t border-fd-border">
           <button
             onClick={() => {
               if (isSplit) {
@@ -91,16 +91,28 @@ export function KerningComparison() {
               }
               setIsSplit((s) => !s);
             }}
-            className="w-20 h-9.5 text-[15px] rounded-lg border border-fd-border font-medium cursor-pointer bg-fd-secondary text-fd-secondary-foreground hover:bg-fd-accent transition-all duration-100 active:scale-[0.98]"
+            aria-pressed={isSplit}
+            aria-label={isSplit ? "Revert" : "Split"}
+            className={`w-20 h-9.5 text-[15px] rounded-l-md border font-medium cursor-pointer transition-all duration-100 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring focus-visible:ring-offset-2 ${
+              isSplit
+                ? "bg-fd-accent text-fd-accent-foreground border-fd-foreground/20"
+                : "border-fd-border bg-fd-secondary text-fd-secondary-foreground"
+            }`}
           >
             {isSplit ? "Revert" : "Split"}
           </button>
           <button
             disabled={!isSplit}
             onClick={() => setShowOutlines((s) => !s)}
-            className={`h-9.5 text-[15px] px-4 rounded-lg border font-medium cursor-pointer transition-all duration-100 not-disabled:active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+            aria-pressed={showOutlines}
+            aria-label={
               showOutlines
-                ? "border-fd-primary/30 bg-fd-primary/10 text-fd-primary"
+                ? "Hide character outlines"
+                : "Show character outlines"
+            }
+            className={`h-9.5 text-[15px] px-4 rounded-r-md border border-l-0 font-medium cursor-pointer transition-all duration-100 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring focus-visible:ring-offset-2 ${
+              showOutlines
+                ? "bg-fd-accent text-fd-accent-foreground border-fd-foreground/20"
                 : "border-fd-border bg-fd-secondary text-fd-secondary-foreground not-disabled:hover:bg-fd-accent"
             }`}
           >
