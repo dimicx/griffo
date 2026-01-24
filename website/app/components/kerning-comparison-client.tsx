@@ -212,6 +212,8 @@ function FettaTextRow({
   };
 
   const handleMouseOver = (e: React.MouseEvent) => {
+    if (!showOutlines) return;
+
     const target = e.target as HTMLElement;
     if (!target.classList.contains("split-char") || !target.dataset.margin) {
       return;
@@ -257,6 +259,8 @@ function FettaTextRow({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (!showOutlines) return;
+
     const target = e.target as HTMLElement;
     if (target.classList.contains("split-char") && target.dataset.margin) {
       showTooltipForChar(target);
@@ -269,7 +273,13 @@ function FettaTextRow({
     <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3">
       <span
         ref={ref}
-        className="text-[28px] lg:text-[32px] font-medium tracking-tight leading-tight [&_.split-char[data-margin]]:cursor-help [&_.split-char[data-active]]:bg-fd-foreground/10 [&_.split-char[data-active]]:dark:bg-amber-500/20"
+        className={cn(
+          "text-[28px] lg:text-[32px] font-medium tracking-tight leading-tight",
+          {
+            "[&_.split-char[data-margin]]:cursor-help [&_.split-char[data-active]]:bg-fd-foreground/10 [&_.split-char[data-active]]:dark:bg-amber-500/20":
+              showOutlines,
+          },
+        )}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onMouseOver={handleMouseOver}
