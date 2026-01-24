@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { splitText } from "fetta";
 import gsap from "gsap";
 import { SplitText as GSAPSplitText } from "gsap/SplitText";
@@ -328,32 +329,36 @@ export function KerningComparison() {
     return (
       <figure className="my-8 not-prose font-sans">
         <div className="bg-fd-card rounded-xl relative border shadow-sm overflow-hidden">
-          {/* Mobile images (< sm) */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/compensation-light-mobile.webp"
-            alt="Kerning compensation comparison showing GSAP SplitText vs Fetta"
-            className="w-full sm:hidden dark:hidden"
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/compensation-dark-mobile.webp"
-            alt="Kerning compensation comparison showing GSAP SplitText vs Fetta"
-            className="w-full hidden dark:block sm:dark:hidden"
-          />
-          {/* Desktop images (sm+) */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/compensation-light.webp"
-            alt="Kerning compensation comparison showing GSAP SplitText vs Fetta"
-            className="w-full hidden sm:block sm:dark:hidden"
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/compensation-dark.webp"
-            alt="Kerning compensation comparison showing GSAP SplitText vs Fetta"
-            className="w-full hidden sm:dark:block"
-          />
+          {/* Mobile container (< sm) */}
+          <div className="relative sm:hidden aspect-127/50">
+            <Image
+              src="/compensation-light-mobile.webp"
+              alt="Kerning compensation comparison showing GSAP SplitText vs Fetta"
+              fill
+              className="object-cover dark:hidden"
+            />
+            <Image
+              src="/compensation-dark-mobile.webp"
+              alt="Kerning compensation comparison showing GSAP SplitText vs Fetta"
+              fill
+              className="object-cover hidden dark:block"
+            />
+          </div>
+          {/* Desktop container (sm+) */}
+          <div className="relative hidden sm:block aspect-847/120">
+            <Image
+              src="/compensation-light.webp"
+              alt="Kerning compensation comparison showing GSAP SplitText vs Fetta"
+              fill
+              className="object-cover dark:hidden"
+            />
+            <Image
+              src="/compensation-dark.webp"
+              alt="Kerning compensation comparison showing GSAP SplitText vs Fetta"
+              fill
+              className="object-cover hidden dark:block"
+            />
+          </div>
         </div>
 
         <figcaption className="mt-4 text-center text-xs text-fd-muted-foreground text-balance max-w-prose mx-auto">
