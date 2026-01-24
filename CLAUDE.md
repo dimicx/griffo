@@ -60,11 +60,15 @@ packages/fetta/
 **Kerning Compensation System**
 The core innovation is measuring kerning between character pairs and applying margin adjustments to maintain original typography:
 
-1. For each word, measure kerning using DOM-based measurement (pair width - char1 width - char2 width)
+1. For each word, measure kerning (pair width - char1 width - char2 width)
 2. Split text into span elements
 3. Apply `marginLeft` adjustments to compensate for lost kerning
 
-The DOM-based measurement creates a hidden span that inherits all styles including `-webkit-font-smoothing`, which is critical for accurate Safari measurements. A 0.01px threshold captures subpixel adjustments.
+Kerning measurement uses a hybrid approach for optimal performance and accuracy:
+- **Canvas API** for Chrome/Firefox/Edge (~0.05-0.17ms) - fast `measureText()` calls
+- **DOM-based** for Safari (~0.4-4ms) - inherits `-webkit-font-smoothing` for accurate measurements
+
+A 0.01px threshold captures subpixel adjustments.
 
 **Dash Handling**
 Text can wrap naturally after em-dashes (—) and en-dashes (–):

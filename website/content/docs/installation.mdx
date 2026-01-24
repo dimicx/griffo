@@ -30,7 +30,7 @@ yarn add fetta
   </Tab>
 </Tabs>
 
-**Bundle size**: ~3.4 kB (core) / ~4.3 kB (React) — minified + compressed
+**Bundle size**: ~3.9 kB (`fetta/core`) / ~4.8 kB (`fetta/react`) — minified + compressed
 
 ## Quick Start
 
@@ -57,3 +57,9 @@ import { splitText } from 'fetta';
 const { chars } = splitText(document.querySelector('h1'));
 // Animate with any library
 ```
+
+## Browser Support
+
+All modern browsers: Chrome, Firefox, Safari, Edge.
+
+Requires `ResizeObserver`, `IntersectionObserver`, and `Intl.Segmenter`.
