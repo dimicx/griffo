@@ -1633,6 +1633,7 @@ export function splitText(
   // Store original HTML for revert
   const originalHTML = element.innerHTML;
   const originalAriaLabel = element.getAttribute("aria-label");
+  const originalStyle = element.getAttribute("style");
 
   // Parse type option into flags
   let splitChars = type.includes("chars");
@@ -1876,9 +1877,12 @@ export function splitText(
       }
     }
 
-    // Keep ligatures disabled if we split chars (prevents visual shift on revert)
-    if (splitChars) {
-      element.style.fontVariantLigatures = "none";
+    // Restore the original style attribute, clearing the ligature override
+    // applied during the split so the element matches its pre-split rendering.
+    if (originalStyle !== null) {
+      element.setAttribute("style", originalStyle);
+    } else {
+      element.removeAttribute("style");
     }
 
     // Auto-dispose when reverted

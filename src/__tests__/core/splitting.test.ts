@@ -399,14 +399,29 @@ describe("splitText", () => {
       expect(element.hasAttribute("aria-label")).toBe(false);
     });
 
-    it("keeps ligatures disabled after revert when chars were split", () => {
+    it("restores font-variant-ligatures after revert when chars were split", () => {
       const element = document.createElement("p");
       element.textContent = "Hello";
       container.appendChild(element);
 
       splitText(element, { type: "chars" }).revert();
 
-      expect(element.style.fontVariantLigatures).toBe("none");
+      expect(element.style.fontVariantLigatures).toBe("");
+      expect(element.hasAttribute("style")).toBe(false);
+    });
+
+    it("restores the original style attribute verbatim after revert (#12)", () => {
+      const element = document.createElement("p");
+      element.textContent = "Hello";
+      element.setAttribute("style", "color: red;");
+      container.appendChild(element);
+
+      const originalStyle = element.getAttribute("style");
+
+      splitText(element, { type: "chars" }).revert();
+
+      expect(element.getAttribute("style")).toBe(originalStyle);
+      expect(element.style.fontVariantLigatures).toBe("");
     });
   });
 
