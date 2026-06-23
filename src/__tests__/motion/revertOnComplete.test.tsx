@@ -185,4 +185,64 @@ describe("SplitText revertOnComplete (motion)", () => {
     });
     expect(onRevert).toHaveBeenCalledTimes(1);
   });
+
+  it("keeps ligatures disabled after manual revert by default", async () => {
+    let splitResult: SplitTextElements | null = null;
+
+    const { container } = render(
+      <SplitText
+        options={{ type: "chars" }}
+        onSplit={(result) => {
+          splitResult = result;
+        }}
+      >
+        <p>Hello</p>
+      </SplitText>
+    );
+
+    await waitFor(() => {
+      expect(splitResult).not.toBeNull();
+      expect(container.querySelectorAll(".split-char").length).toBeGreaterThan(0);
+    });
+
+    act(() => {
+      splitResult?.revert();
+    });
+
+    await waitFor(() => {
+      expect(container.querySelectorAll(".split-char").length).toBe(0);
+      expect(container.querySelector("p")?.style.fontVariantLigatures).toBe("none");
+    });
+  });
+
+  it("restores authored child styles after manual revert when requested", async () => {
+    let splitResult: SplitTextElements | null = null;
+
+    const { container } = render(
+      <SplitText
+        options={{ type: "chars", restoreLigaturesOnRevert: true }}
+        onSplit={(result) => {
+          splitResult = result;
+        }}
+      >
+        <p style={{ color: "red" }}>Hello</p>
+      </SplitText>
+    );
+
+    await waitFor(() => {
+      expect(splitResult).not.toBeNull();
+      expect(container.querySelectorAll(".split-char").length).toBeGreaterThan(0);
+    });
+
+    act(() => {
+      splitResult?.revert();
+    });
+
+    await waitFor(() => {
+      const element = container.querySelector("p");
+      expect(container.querySelectorAll(".split-char").length).toBe(0);
+      expect(element?.style.fontVariantLigatures).toBe("");
+      expect(element?.style.color).toBe("red");
+    });
+  });
 });

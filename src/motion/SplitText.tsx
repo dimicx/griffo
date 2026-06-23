@@ -72,6 +72,9 @@ export interface SplitTextOptions {
    * Kerning is naturally lost when splitting into inline-block spans.
    * Use this if you prefer no compensation over imperfect Safari compensation. */
   disableKerning?: boolean;
+  /** Restore the element's original inline ligature styling on revert.
+   * By default, char splits keep ligatures disabled after revert to avoid a visual snap. */
+  restoreLigaturesOnRevert?: boolean;
 }
 
 type InternalSplitTextOptions = SplitTextOptions & {
@@ -1314,6 +1317,7 @@ function buildSplitSignature(
     mask: opt.mask ?? "",
     propIndex: !!opt.propIndex,
     disableKerning: !!opt.disableKerning,
+    restoreLigaturesOnRevert: !!opt.restoreLigaturesOnRevert,
     isolateKerningMeasurement: opt.isolateKerningMeasurement !== false,
     initialStyles: serializeInitial(initialStyles),
     initialClasses: serializeInitial(initialClasses),
@@ -2951,6 +2955,17 @@ export const SplitText = forwardRef(function SplitText<TCustom>(
         })()
       : cloneElement(children, {
           key: `raw-${childTreeVersion}`,
+          ...(hasRevertedRef.current &&
+          !options?.restoreLigaturesOnRevert &&
+          resolveSplitFlags(options?.type).splitChars
+            ? {
+                style: {
+                  ...((children.props as { style?: React.CSSProperties })
+                    .style ?? {}),
+                  fontVariantLigatures: "none",
+                },
+              }
+            : {}),
         });
 
     const Wrapper = getMotionComponent(Component);

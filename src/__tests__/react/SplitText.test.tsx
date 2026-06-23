@@ -453,6 +453,38 @@ describe("SplitText React Component", () => {
     expect(onRevert).toHaveBeenCalledTimes(1);
   });
 
+  it("passes options.restoreLigaturesOnRevert through to core revert", async () => {
+    let splitResult: {
+      revert: () => void;
+    } | null = null;
+
+    const { container } = render(
+      <SplitText
+        options={{ type: "chars", restoreLigaturesOnRevert: true }}
+        onSplit={(result) => {
+          splitResult = result;
+        }}
+      >
+        <p>Hello</p>
+      </SplitText>
+    );
+
+    await waitFor(() => {
+      expect(splitResult).not.toBeNull();
+      expect(container.querySelectorAll(".split-char").length).toBeGreaterThan(0);
+    });
+
+    act(() => {
+      splitResult?.revert();
+    });
+
+    await waitFor(() => {
+      const element = container.querySelector("p");
+      expect(element?.style.fontVariantLigatures).toBe("");
+      expect(element?.hasAttribute("style")).toBe(false);
+    });
+  });
+
   it("does not double-split in StrictMode", async () => {
     const onSplit = vi.fn();
 

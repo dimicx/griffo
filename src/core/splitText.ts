@@ -100,6 +100,9 @@ export interface SplitTextOptions {
    * Kerning is naturally lost when splitting into inline-block spans.
    * Use this if you prefer no compensation over imperfect Safari compensation. */
   disableKerning?: boolean;
+  /** Restore the element's original inline ligature styling on revert.
+   * By default, char splits keep ligatures disabled after revert to avoid a visual snap. */
+  restoreLigaturesOnRevert?: boolean;
   /** Apply initial inline styles to elements after split (and after kerning compensation).
    * Can be a static style object or a function that receives (element, index). */
   initialStyles?: {
@@ -1602,6 +1605,7 @@ export function splitText(
     revertOnComplete = false,
     propIndex = false,
     disableKerning = false,
+    restoreLigaturesOnRevert = false,
     initialStyles,
     initialClasses,
   } = options;
@@ -1633,6 +1637,28 @@ export function splitText(
   // Store original HTML for revert
   const originalHTML = element.innerHTML;
   const originalAriaLabel = element.getAttribute("aria-label");
+  const hadOriginalStyleAttribute = element.hasAttribute("style");
+  const originalInlineLigatures = element.style.getPropertyValue(
+    "font-variant-ligatures"
+  );
+  const originalInlineLigaturesPriority = element.style.getPropertyPriority(
+    "font-variant-ligatures"
+  );
+
+  const restoreOriginalLigatureStyle = () => {
+    if (originalInlineLigatures) {
+      element.style.setProperty(
+        "font-variant-ligatures",
+        originalInlineLigatures,
+        originalInlineLigaturesPriority
+      );
+    } else {
+      element.style.removeProperty("font-variant-ligatures");
+      if (!hadOriginalStyleAttribute && element.getAttribute("style") === "") {
+        element.removeAttribute("style");
+      }
+    }
+  };
 
   // Parse type option into flags
   let splitChars = type.includes("chars");
@@ -1876,9 +1902,13 @@ export function splitText(
       }
     }
 
-    // Keep ligatures disabled if we split chars (prevents visual shift on revert)
+    // Keep ligatures disabled by default to prevent visual shift on revert.
     if (splitChars) {
-      element.style.fontVariantLigatures = "none";
+      if (restoreLigaturesOnRevert) {
+        restoreOriginalLigatureStyle();
+      } else {
+        element.style.fontVariantLigatures = "none";
+      }
     }
 
     // Auto-dispose when reverted

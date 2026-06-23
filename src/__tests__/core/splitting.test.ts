@@ -408,6 +408,61 @@ describe("splitText", () => {
 
       expect(element.style.fontVariantLigatures).toBe("none");
     });
+
+    it("restores ligatures after revert when restoreLigaturesOnRevert is enabled", () => {
+      const element = document.createElement("p");
+      element.textContent = "Hello";
+      container.appendChild(element);
+
+      splitText(element, {
+        type: "chars",
+        restoreLigaturesOnRevert: true,
+      }).revert();
+
+      expect(element.style.fontVariantLigatures).toBe("");
+      expect(element.hasAttribute("style")).toBe(false);
+    });
+
+    it("preserves unrelated inline style changes when restoring ligatures", () => {
+      const element = document.createElement("p");
+      element.textContent = "Hello";
+      element.style.color = "red";
+      container.appendChild(element);
+
+      const result = splitText(element, {
+        type: "chars",
+        restoreLigaturesOnRevert: true,
+      });
+      element.style.backgroundColor = "blue";
+      result.revert();
+
+      expect(element.style.fontVariantLigatures).toBe("");
+      expect(element.style.color).toBe("red");
+      expect(element.style.backgroundColor).toBe("blue");
+    });
+
+    it("restores the original inline ligature value and priority", () => {
+      const element = document.createElement("p");
+      element.textContent = "Hello";
+      element.style.setProperty(
+        "font-variant-ligatures",
+        "common-ligatures",
+        "important"
+      );
+      container.appendChild(element);
+
+      splitText(element, {
+        type: "chars",
+        restoreLigaturesOnRevert: true,
+      }).revert();
+
+      expect(
+        element.style.getPropertyValue("font-variant-ligatures")
+      ).toBe("common-ligatures");
+      expect(
+        element.style.getPropertyPriority("font-variant-ligatures")
+      ).toBe("important");
+    });
   });
 
   describe("empty content handling", () => {

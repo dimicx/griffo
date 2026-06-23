@@ -40,6 +40,9 @@ export interface SplitTextOptions {
    * Kerning is naturally lost when splitting into inline-block spans.
    * Use this if you prefer no compensation over imperfect Safari compensation. */
   disableKerning?: boolean;
+  /** Restore the element's original inline ligature styling on revert.
+   * By default, char splits keep ligatures disabled after revert to avoid a visual snap. */
+  restoreLigaturesOnRevert?: boolean;
 }
 
 /** Matches Motion's viewport prop */

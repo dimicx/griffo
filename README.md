@@ -96,7 +96,7 @@ Full API reference at [griffo.dimi.me](https://griffo.dimi.me/). Summary below.
 
 ### `splitText(element, options?)` — [Core docs](https://griffo.dimi.me/api/core)
 
-Returns `{ chars, words, lines, revert }`. Key options: `type`, `mask`, `autoSplit`, `onSplit`, `revertOnComplete`, `initialStyles`, `propIndex`.
+Returns `{ chars, words, lines, revert }`. Key options: `type`, `mask`, `autoSplit`, `onSplit`, `revertOnComplete`, `initialStyles`, `propIndex`, `restoreLigaturesOnRevert`.
 
 ```ts
 import { splitText } from "griffo";
@@ -193,7 +193,7 @@ layers.cleanup();
 
 ## Notes
 
-- Ligatures are disabled (`font-variant-ligatures: none`) because ligatures can't span multiple elements.
+- Ligatures are disabled (`font-variant-ligatures: none`) because ligatures can't span multiple elements. After char-split revert, Griffo keeps them disabled by default to avoid a visual snap; set `restoreLigaturesOnRevert: true` to restore the original ligature styling.
 - React and Motion components wait for fonts by default (`waitForFonts`). In vanilla, wrap calls in `document.fonts.ready`.
 - Accessibility is automatic: headings get `aria-label`, generic elements get a screen-reader-only copy.
 
