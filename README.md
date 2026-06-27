@@ -4,7 +4,7 @@ Kerning-aware text splitting.
 
 Split text into characters, words, and lines for animation — without breaking your typography. Most splitting libraries wrap each character in a `<span>` and call it done, but that destroys the kerning between character pairs. Griffo compensates for this automatically.
 
-Docs: https://griffo.dimi.me/
+Docs: https://griffo.dev/
 
 ## Install
 
@@ -92,9 +92,9 @@ Sizes are minified + brotli.
 
 ## API Overview
 
-Full API reference at [griffo.dimi.me](https://griffo.dimi.me/). Summary below.
+Full API reference at [griffo.dev](https://griffo.dev/). Summary below.
 
-### `splitText(element, options?)` — [Core docs](https://griffo.dimi.me/api/core)
+### `splitText(element, options?)` — [Core docs](https://griffo.dev/api/core)
 
 Returns `{ chars, words, lines, revert }`. Key options: `type`, `mask`, `autoSplit`, `onSplit`, `revertOnComplete`, `initialStyles`, `propIndex`, `restoreLigaturesOnRevert`.
 
@@ -108,7 +108,7 @@ document.fonts.ready.then(() => {
 });
 ```
 
-### `<SplitText>` — [React docs](https://griffo.dimi.me/api/react)
+### `<SplitText>` — [React docs](https://griffo.dev/api/react)
 
 Wraps `splitText()` with React lifecycle, viewport callbacks, and automatic cleanup. Key props: `onSplit`, `onResplit`, `options`, `autoSplit`, `waitForFonts`, `revertOnComplete`, `viewport`, `onViewportEnter`, `initialStyles`.
 
@@ -129,7 +129,7 @@ import { animate, stagger } from "motion";
 </SplitText>
 ```
 
-### `<SplitText>` — [Motion docs](https://griffo.dimi.me/api/motion)
+### `<SplitText>` — [Motion docs](https://griffo.dev/api/motion)
 
 Includes all React props plus Motion animation: `variants`, `initial`, `animate`, `exit`, `whileInView`, `whileScroll`, `whileHover`, `whileTap`, `whileFocus`, `transition`, `delayScope`, `custom`. Supports flat targets, per-type targets (`chars`/`words`/`lines`/`wrapper`), and function variants.
 
@@ -158,7 +158,7 @@ import { stagger } from "motion";
 </SplitText>
 ```
 
-### `<MorphText>` — [Morph docs](https://griffo.dimi.me/api/morph)
+### `<MorphText>` — [Morph docs](https://griffo.dev/api/morph)
 
 Text morphing with stable token identity. Matching tokens interpolate position, new tokens enter, removed tokens exit. Supports `splitBy="chars"` (default) and `splitBy="words"`. The `initial`, `animate`, and `exit` props accept static targets or `({ index, count }) => Target` callbacks.
 
@@ -177,7 +177,7 @@ import { MorphText } from "griffo/morph";
 </MorphText>
 ```
 
-### `createSplitClones()` — [Helpers docs](https://griffo.dimi.me/api/helpers)
+### `createSplitClones()` — [Helpers docs](https://griffo.dev/api/helpers)
 
 Creates clone layers from split output for reveal/swap effects. Pass an existing `splitText()` result.
 

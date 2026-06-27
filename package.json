@@ -1,6 +1,6 @@
 {
   "name": "griffo",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Kerning-aware text splitting",
   "type": "module",
   "sideEffects": false,
@@ -138,7 +138,7 @@
   "bugs": {
     "url": "https://github.com/dimicx/griffo/issues"
   },
-  "homepage": "https://griffo.dimi.me",
+  "homepage": "https://griffo.dev",
   "publishConfig": {
     "access": "public"
   }
